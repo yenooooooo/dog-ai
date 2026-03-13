@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd C:/Users/ailee/github/Dog-Ai && npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git --use-npm --yes 2>&1)",
+      "Read(//c/Users/ailee/github/**)",
+      "Bash(npx create-next-app@latest mungwalk-temp --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git --use-npm --yes)",
+      "Bash(cp -r C:/Users/ailee/github/mungwalk-temp/* C:/Users/ailee/github/Dog-Ai/ && cp -r C:/Users/ailee/github/mungwalk-temp/.eslintrc* C:/Users/ailee/github/Dog-Ai/ 2>/dev/null; cp C:/Users/ailee/github/mungwalk-temp/.gitignore C:/Users/ailee/github/Dog-Ai/ 2>/dev/null; cp C:/Users/ailee/github/mungwalk-temp/tsconfig.json C:/Users/ailee/github/Dog-Ai/ 2>/dev/null; rm -rf C:/Users/ailee/github/mungwalk-temp)",
+      "Bash(cd C:/Users/ailee/github/Dog-Ai && npm install @supabase/supabase-js @supabase/ssr zustand zod sonner html-to-image lucide-react clsx tailwind-merge 2>&1)",
+      "Bash(cd C:/Users/ailee/github/Dog-Ai && npx shadcn@latest init -d --yes 2>&1)"
+    ]
+  }
+}
