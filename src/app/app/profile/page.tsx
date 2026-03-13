@@ -1,0 +1,110 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { LogOut, Plus, User } from 'lucide-react';
+
+import { useAuth } from '@/hooks/useAuth';
+import {
+  getUser,
+  saveUser,
+  getPets,
+  type StoredUser,
+  type StoredPet,
+} from '@/lib/profile-storage';
+import UserForm from '@/components/profile/UserForm';
+import PetCard from '@/components/profile/PetCard';
+
+export default function ProfilePage() {
+  const router = useRouter();
+  const { signOut } = useAuth();
+  const [user, setUser] = useState<StoredUser | null>(null);
+  const [pets, setPets] = useState<StoredPet[]>([]);
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    setUser(getUser());
+    setPets(getPets());
+  }, []);
+
+  const handleSaveUser = (data: StoredUser) => {
+    saveUser(data);
+    setUser(data);
+    setEditing(false);
+  };
+
+  return (
+    <div className="flex h-full flex-col bg-mw-gray-50">
+      <header className="flex items-center justify-between bg-white px-5 pb-3 pt-4">
+        <h1 className="text-[20px] font-bold text-mw-gray-900">내 프로필</h1>
+        <button
+          onClick={signOut}
+          className="flex items-center gap-1 text-[13px] text-mw-gray-500"
+        >
+          <LogOut size={14} />
+          로그아웃
+        </button>
+      </header>
+
+      <div className="flex-1 overflow-y-auto px-4 pb-4 pt-3">
+        {/* 유저 프로필 */}
+        <div className="rounded-mw-lg border border-mw-gray-100 bg-white p-5">
+          {editing || !user ? (
+            <UserForm
+              initialData={user ?? undefined}
+              onSave={handleSaveUser}
+              onCancel={user ? () => setEditing(false) : undefined}
+            />
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-mw-green-50">
+                <User size={24} className="text-mw-green-500" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[17px] font-semibold text-mw-gray-900">
+                  {user.nickname}
+                </p>
+                {user.neighborhood && (
+                  <p className="text-[13px] text-mw-gray-500">
+                    {user.neighborhood}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => setEditing(true)}
+                className="text-[13px] font-medium text-mw-green-500"
+              >
+                수정
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* 반려견 목록 */}
+        <div className="mt-5">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-[17px] font-bold text-mw-gray-900">반려견</h2>
+            <button
+              onClick={() => router.push('/app/profile/pet/new')}
+              className="flex items-center gap-1 text-[13px] font-medium text-mw-green-500"
+            >
+              <Plus size={16} />
+              추가
+            </button>
+          </div>
+          {pets.length === 0 ? (
+            <p className="py-8 text-center text-[13px] text-mw-gray-400">
+              등록된 반려견이 없어요
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {pets.map((pet) => (
+                <PetCard key={pet.id} pet={pet} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
