@@ -8,6 +8,7 @@ import { ArrowLeft, Route, Timer, Zap, Calendar } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { Coordinate } from '@/types/route';
 import RoutePolyline from '@/components/map/RoutePolyline';
+import HistoryShareCard from '@/components/walk/HistoryShareCard';
 
 const KakaoMap = dynamic(() => import('@/components/map/KakaoMap'), {
   ssr: false,
@@ -116,6 +117,10 @@ export default function WalkDetailPage() {
             />
           </div>
         </div>
+
+        {walk.coordinates.length >= 2 && (
+          <HistoryShareCard coordinates={walk.coordinates} distance={walk.distanceMeters} durationSec={walk.durationSeconds} />
+        )}
       </div>
     </div>
   );
