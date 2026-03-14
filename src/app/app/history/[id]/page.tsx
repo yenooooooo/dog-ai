@@ -5,27 +5,43 @@ import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { ArrowLeft, Route, Timer, Zap, Calendar } from 'lucide-react';
 
-import { getWalkById, type StoredWalk } from '@/lib/walk-storage';
+import { createClient } from '@/lib/supabase/client';
+import type { Coordinate } from '@/types/route';
 import RoutePolyline from '@/components/map/RoutePolyline';
 
 const KakaoMap = dynamic(() => import('@/components/map/KakaoMap'), {
   ssr: false,
-  loading: () => <div className="h-[45vh] w-full bg-muted animate-pulse" />,
+  loading: () => <div className="h-[45vh] w-full bg-mw-gray-100 animate-pulse" />,
 });
 
 export default function WalkDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [walk, setWalk] = useState<StoredWalk | null>(null);
+  const [walk, setWalk] = useState<{
+    distanceMeters: number; durationSeconds: number;
+    startedAt: string; coordinates: Coordinate[];
+  } | null>(null);
   const [mapInstance, setMapInstance] = useState<kakao.maps.Map | null>(null);
 
   useEffect(() => {
-    const data = getWalkById(id);
-    if (!data) {
-      router.replace('/app/history');
-      return;
-    }
-    setWalk(data);
+    const load = async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('mw_walks')
+        .select('distance_meters, duration_seconds, started_at, route_geojson')
+        .eq('id', id).single();
+      if (!data) { router.replace('/app/history'); return; }
+      const coords: Coordinate[] = data.route_geojson?.coordinates?.map(
+        (c: number[]) => ({ lng: c[0], lat: c[1] })
+      ) ?? [];
+      setWalk({
+        distanceMeters: data.distance_meters,
+        durationSeconds: data.duration_seconds,
+        startedAt: data.started_at,
+        coordinates: coords,
+      });
+    };
+    load();
   }, [id, router]);
 
   if (!walk) return null;

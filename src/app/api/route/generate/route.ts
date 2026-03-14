@@ -67,22 +67,12 @@ export async function POST(request: Request) {
       currentRadius = adjusted;
     }
 
-    // Kakao API 전부 실패 시 직선 연결 폴백
+    // Kakao API 전부 실패 시 에러 반환 (비안전 직선 루트 방지)
     if (finalRoutes.length === 0) {
-      const { routes, targetDistance } = generateWaypoints(
-        origin,
-        durationMinutes
+      return NextResponse.json(
+        { error: '이 위치에서 도보 경로를 찾을 수 없어요. 위치를 옮겨서 다시 시도해주세요.', code: 'NO_ROUTE' },
+        { status: 422 }
       );
-      finalRoutes = routes.map((r, idx) => ({
-        id: `route-${idx}-${Date.now()}`,
-        name: r.name,
-        tags: r.tags,
-        segments: [] as RouteSegment[],
-        totalDistance: targetDistance,
-        estimatedDuration: durationMinutes,
-        waypoints: r.waypoints.map((wp, i) => ({ ...wp, order: i })),
-        path: [origin, ...r.waypoints, origin],
-      }));
     }
 
     return NextResponse.json({ routes: finalRoutes });
