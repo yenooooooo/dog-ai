@@ -1,16 +1,30 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, MapPin, X } from 'lucide-react';
+import { Search, MapPin, X, Dog } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { cn } from '@/lib/utils';
 import type { Coordinate } from '@/types/route';
 
 interface AddressSearchProps {
   onSelect: (coord: Coordinate, name: string) => void;
 }
 
-interface Place { name: string; address: string; lat: string; lng: string }
+interface Place {
+  name: string;
+  address: string;
+  lat: string;
+  lng: string;
+  category: string;
+  petFriendly: 'yes' | 'maybe' | 'unknown';
+}
+
+const PET_LABEL = {
+  yes: { text: '동반 가능', cls: 'bg-mw-green-50 text-mw-green-600' },
+  maybe: { text: '동반 가능성', cls: 'bg-mw-amber-400/10 text-mw-amber-500' },
+  unknown: { text: '확인 필요', cls: 'bg-mw-gray-100 text-mw-gray-500' },
+};
 
 export default function AddressSearch({ onSelect }: AddressSearchProps) {
   const [open, setOpen] = useState(false);
@@ -42,7 +56,7 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
     return (
       <button onClick={() => setOpen(true)} className="mt-2 flex w-full items-center gap-2 rounded-mw-sm border border-dashed border-mw-gray-300 px-3 py-2.5 text-[13px] text-mw-gray-400 active:bg-mw-gray-50">
         <Search size={14} />
-        주소·장소로 출발 위치 검색
+        주소·장소 검색 (반려견 동반 여부 확인)
       </button>
     );
   }
@@ -52,11 +66,10 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
       <div className="flex items-center gap-2">
         <Search size={16} className="shrink-0 text-mw-green-500" />
         <input
-          type="text"
-          value={query}
+          type="text" value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          placeholder="주소 또는 장소명"
+          placeholder="카페, 공원, 음식점, 산..."
           autoFocus
           className="flex-1 text-[14px] text-mw-gray-800 placeholder:text-mw-gray-400 focus:outline-none"
         />
@@ -68,16 +81,24 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
         {loading ? '검색 중...' : '검색'}
       </button>
       {results.length > 0 && (
-        <div className="mt-2 flex max-h-[150px] flex-col gap-1 overflow-y-auto">
-          {results.map((r, i) => (
-            <button key={i} onClick={() => handleSelect(r)} className="flex items-start gap-2 rounded-mw-sm px-2 py-2 text-left active:bg-mw-gray-50">
-              <MapPin size={14} className="mt-0.5 shrink-0 text-mw-danger" />
-              <div>
-                <p className="text-[13px] font-medium text-mw-gray-900">{r.name}</p>
-                <p className="text-[11px] text-mw-gray-400">{r.address}</p>
-              </div>
-            </button>
-          ))}
+        <div className="mt-2 flex max-h-[200px] flex-col gap-1 overflow-y-auto">
+          {results.map((r, i) => {
+            const pet = PET_LABEL[r.petFriendly];
+            return (
+              <button key={i} onClick={() => handleSelect(r)} className="flex items-start gap-2 rounded-mw-sm px-2 py-2.5 text-left active:bg-mw-gray-50">
+                <MapPin size={14} className="mt-0.5 shrink-0 text-mw-danger" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[13px] font-medium text-mw-gray-900">{r.name}</p>
+                    <span className={cn('flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[9px] font-medium', pet.cls)}>
+                      <Dog size={9} /> {pet.text}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-mw-gray-400">{r.address}</p>
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

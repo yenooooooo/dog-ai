@@ -64,7 +64,9 @@ export type TagType =
   | 'traffic'
   | 'scenic'
   | 'pet_friendly'
-  | 'trash_bin';
+  | 'trash_bin'
+  | 'pet_allowed'
+  | 'pet_banned';
 
 export interface TagVote {
   id: string;

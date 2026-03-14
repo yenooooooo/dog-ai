@@ -13,6 +13,7 @@ import RoutePolyline from '@/components/map/RoutePolyline';
 import RouteDirectionMarkers from '@/components/map/RouteDirectionMarkers';
 import OriginMarker from '@/components/map/OriginMarker';
 import PastRoutes from '@/components/map/PastRoutes';
+import PetFriendlyButton from '@/components/map/PetFriendlyButton';
 import TodayStatus from '@/components/walk/TodayStatus';
 import MainBottomContent from '@/components/walk/MainBottomContent';
 import type { Coordinate, GeneratedRoute } from '@/types/route';
@@ -94,6 +95,7 @@ export default function AppMainPage() {
       {mapInstance && routes.length === 0 && <PastRoutes map={mapInstance} />}
 
       <TodayStatus />
+      {routes.length === 0 && <PetFriendlyButton map={mapInstance} position={position} />}
 
       {customOrigin && routes.length === 0 && (
         <div className="absolute left-5 top-3 z-30 flex items-center gap-2">
