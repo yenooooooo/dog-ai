@@ -1,64 +1,41 @@
 /**
  * Google Directions API — 도보 경로 (WALKING)
- * 보행자 전용 도로 + 인도 + 공원 산책로 포함
- * GOOGLE_MAPS_API_KEY 환경변수 필요
+ * 순환 경로를 구간별로 나눠서 호출 (origin→wp1, wp1→wp2, ..., wpN→origin)
  */
 import type { Coordinate } from '@/types/route';
 
-interface GoogleStep {
-  start_location: { lat: number; lng: number };
-  end_location: { lat: number; lng: number };
-  polyline: { points: string };
-}
-
-interface GoogleRoute {
-  legs: Array<{
-    distance: { value: number };
-    duration: { value: number };
-    steps: GoogleStep[];
-  }>;
+interface GoogleLeg {
+  distance: { value: number };
+  duration: { value: number };
+  steps: Array<{ polyline: { points: string } }>;
 }
 
 interface GoogleResponse {
   status: string;
-  routes: GoogleRoute[];
+  routes: Array<{ legs: GoogleLeg[] }>;
 }
 
-/** Google 인코딩된 폴리라인 디코딩 */
 function decodePolyline(encoded: string): Coordinate[] {
   const coords: Coordinate[] = [];
   let idx = 0, lat = 0, lng = 0;
-
   while (idx < encoded.length) {
     let shift = 0, result = 0, b: number;
     do { b = encoded.charCodeAt(idx++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
     lat += (result & 1) ? ~(result >> 1) : (result >> 1);
-
     shift = 0; result = 0;
     do { b = encoded.charCodeAt(idx++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
     lng += (result & 1) ? ~(result >> 1) : (result >> 1);
-
     coords.push({ lat: lat / 1e5, lng: lng / 1e5 });
   }
   return coords;
 }
 
-/**
- * Google Directions API로 도보 순환 경로 조회
- * origin → waypoints → origin
- */
-export async function fetchGoogleWalkingRoute(
-  origin: Coordinate,
-  waypoints: Coordinate[]
+async function fetchSegment(
+  from: Coordinate,
+  to: Coordinate,
+  apiKey: string
 ): Promise<{ path: Coordinate[]; distance: number; duration: number }> {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-  if (!apiKey) throw new Error('GOOGLE_MAPS_API_KEY 환경변수가 없습니다');
-
-  const waypointsParam = waypoints
-    .map((wp) => `${wp.lat},${wp.lng}`)
-    .join('|');
-
-  const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin.lat},${origin.lng}&destination=${origin.lat},${origin.lng}&waypoints=${encodeURIComponent(waypointsParam)}&mode=walking&language=ko&key=${apiKey}`;
+  const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${from.lat},${from.lng}&destination=${to.lat},${to.lng}&mode=walking&language=ko&key=${apiKey}`;
 
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Google API ${res.status}`);
@@ -69,25 +46,47 @@ export async function fetchGoogleWalkingRoute(
     throw new Error(`Google: ${errMsg}`);
   }
 
-  const route = data.routes[0];
-  let totalDistance = 0;
-  let totalDuration = 0;
+  const leg = data.routes[0].legs[0];
   const path: Coordinate[] = [];
-
-  for (const leg of route.legs) {
-    totalDistance += leg.distance.value;
-    totalDuration += leg.duration.value;
-    for (const step of leg.steps) {
-      const decoded = decodePolyline(step.polyline.points);
-      // 중복 좌표 제거
-      for (const coord of decoded) {
-        const prev = path[path.length - 1];
-        if (!prev || prev.lat !== coord.lat || prev.lng !== coord.lng) {
-          path.push(coord);
-        }
+  for (const step of leg.steps) {
+    for (const coord of decodePolyline(step.polyline.points)) {
+      const prev = path[path.length - 1];
+      if (!prev || prev.lat !== coord.lat || prev.lng !== coord.lng) {
+        path.push(coord);
       }
     }
   }
 
-  return { path, distance: totalDistance, duration: totalDuration };
+  return { path, distance: leg.distance.value, duration: leg.duration.value };
+}
+
+/**
+ * 순환 도보 경로: origin → wp1 → wp2 → ... → origin
+ * 각 구간을 개별 호출하여 연결
+ */
+export async function fetchGoogleWalkingRoute(
+  origin: Coordinate,
+  waypoints: Coordinate[]
+): Promise<{ path: Coordinate[]; distance: number; duration: number }> {
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  if (!apiKey) throw new Error('GOOGLE_MAPS_API_KEY 환경변수가 없습니다');
+
+  // 순환 경로: origin → wp1 → wp2 → wp3 → wp4 → origin
+  const points = [origin, ...waypoints, origin];
+  let totalPath: Coordinate[] = [];
+  let totalDistance = 0;
+  let totalDuration = 0;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const seg = await fetchSegment(points[i], points[i + 1], apiKey);
+    totalDistance += seg.distance;
+    totalDuration += seg.duration;
+    // 중복 시작점 제거
+    if (totalPath.length > 0 && seg.path.length > 0) {
+      seg.path.shift();
+    }
+    totalPath = totalPath.concat(seg.path);
+  }
+
+  return { path: totalPath, distance: totalDistance, duration: totalDuration };
 }
