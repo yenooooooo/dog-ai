@@ -350,11 +350,27 @@ try {
 --mw-bg: #FAFAF5;           /* 따뜻한 화이트 배경 */
 ```
 
-### 8-4. 모바일 최적화
+### 8-4. 모바일 최적화 ⚠️ 중요
 - 터치 타겟 최소 44px × 44px
 - 하단 네비게이션 고정 (safe-area-inset 적용)
 - 지도는 전체 화면, UI는 오버레이로
 - bottom sheet 패턴 활용 (위로 스와이프)
+- 높이: `h-[100dvh]` 사용 (모바일 브라우저 주소창 대응)
+- 스크롤: `overflow-y-auto` + `flex-1` 조합으로 내부 스크롤
+- 입력 필드: `text-[16px]` 이상 (iOS 자동 줌 방지)
+- 버튼: `active:scale-[0.97]` 터치 피드백 필수
+- 폰트: 최소 12px (text-[12px]) — 그 아래는 사용 금지
+
+### 8-5. PWA / iOS 대응
+- `public/manifest.json` — 앱 이름, 아이콘, 테마 색상, standalone 모드
+- `layout.tsx` head에 필수 메타태그:
+  - `<meta name="apple-mobile-web-app-capable" content="yes" />`
+  - `<meta name="apple-mobile-web-app-status-bar-style" content="default" />`
+  - `<meta name="apple-mobile-web-app-title" content="멍산책" />`
+  - `<link rel="apple-touch-icon" href="/icons/icon-192.svg" />`
+- iOS Safari 홈화면 추가 안내: `IosPwaPrompt` 컴포넌트 (앱 레이아웃에 포함)
+- standalone 모드 감지: `window.matchMedia('(display-mode: standalone)')`
+- 아이콘: SVG 사용 (PNG 대비 용량 절약, 벡터 스케일링)
 
 ---
 
