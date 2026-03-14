@@ -22,7 +22,7 @@ const SYSTEM_PROMPT = `당신은 반려견 훈련 전문가입니다.
 
 export async function POST(request: Request) {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
         { error: 'AI 기능이 설정되지 않았어요.', code: 'NO_API_KEY' },
@@ -33,36 +33,39 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { message, petInfo } = requestSchema.parse(body);
 
-    let prompt = SYSTEM_PROMPT;
+    let system = SYSTEM_PROMPT;
     if (petInfo) {
       const age = petInfo.ageMonths ? `${petInfo.ageMonths}개월` : '나이 미상';
       const size = petInfo.size === 'small' ? '소형' : petInfo.size === 'large' ? '대형' : '중형';
-      prompt += `\n\n현재 상담 중인 반려견 정보:
+      system += `\n\n현재 상담 중인 반려견 정보:
 - 이름: ${petInfo.name}
 - 견종: ${petInfo.breed || '미상'}
 - 나이: ${age}
 - 크기: ${size}`;
     }
 
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: message }] }],
-          systemInstruction: { parts: [{ text: prompt }] },
-        }),
-      }
-    );
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        system,
+        messages: [{ role: 'user', content: message }],
+      }),
+    });
 
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      throw new Error(`Gemini API ${res.status}: ${text}`);
+      throw new Error(`Claude API ${res.status}: ${text}`);
     }
 
     const data = await res.json();
-    const answer = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '답변을 생성하지 못했어요.';
+    const answer = data.content?.[0]?.text ?? '답변을 생성하지 못했어요.';
 
     return NextResponse.json({ answer });
   } catch (err) {
