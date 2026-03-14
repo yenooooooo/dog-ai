@@ -17,6 +17,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { origin, durationMinutes, petSize } = requestSchema.parse(body);
+    // 도보 속도 (m/분) — 카카오 API는 차량 시간을 반환하므로 직접 계산
+    const walkSpeed = petSize === 'small' ? 50 : petSize === 'large' ? 83 : 67;
 
     let currentRadius: number | undefined;
     let finalRoutes: GeneratedRoute[] = [];
@@ -43,7 +45,7 @@ export async function POST(request: Request) {
             tags: r.tags,
             segments: [] as RouteSegment[],
             totalDistance: distance,
-            estimatedDuration: Math.round(duration / 60),
+            estimatedDuration: Math.round(distance / walkSpeed),
             waypoints: r.waypoints.map((wp, i) => ({ ...wp, order: i })),
             path,
           } satisfies GeneratedRoute;
