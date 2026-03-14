@@ -63,11 +63,16 @@ export async function fetchWalkingRoute(
   }
 
   // vertexes: [lng, lat, lng, lat, …] 쌍을 Coordinate 배열로 변환
+  // 연속 중복 좌표 제거 (구간 경계에서 발생)
   const path: Coordinate[] = [];
   for (const section of route.sections) {
     for (const road of section.roads) {
       for (let i = 0; i < road.vertexes.length; i += 2) {
-        path.push({ lng: road.vertexes[i], lat: road.vertexes[i + 1] });
+        const coord = { lng: road.vertexes[i], lat: road.vertexes[i + 1] };
+        const prev = path[path.length - 1];
+        if (!prev || prev.lat !== coord.lat || prev.lng !== coord.lng) {
+          path.push(coord);
+        }
       }
     }
   }

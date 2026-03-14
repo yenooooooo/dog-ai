@@ -16,11 +16,22 @@ function formatDistance(meters: number): string {
   return meters >= 1000 ? `${(meters / 1000).toFixed(1)}km` : `${Math.round(meters)}m`;
 }
 
-/** 루트 경로를 120×80 SVG로 변환 */
+/** 좌표 배열 간소화: 균등 샘플링으로 최대 maxPts개 */
+function simplifyPath(path: Coordinate[], maxPts: number): Coordinate[] {
+  if (path.length <= maxPts) return path;
+  const step = (path.length - 1) / (maxPts - 1);
+  return Array.from({ length: maxPts }, (_, i) =>
+    path[Math.round(i * step)]
+  );
+}
+
+/** 루트 경로를 SVG path string으로 변환 */
 function pathToSvg(path: Coordinate[], w: number, h: number): string | null {
   if (path.length < 2) return null;
-  const lats = path.map((c) => c.lat);
-  const lngs = path.map((c) => c.lng);
+  // SVG 미니맵용: 최대 60포인트로 간소화 → 깔끔한 곡선
+  const simplified = simplifyPath(path, 60);
+  const lats = simplified.map((c) => c.lat);
+  const lngs = simplified.map((c) => c.lng);
   const minLat = Math.min(...lats), maxLat = Math.max(...lats);
   const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
   const latR = maxLat - minLat || 0.001;
@@ -30,7 +41,7 @@ function pathToSvg(path: Coordinate[], w: number, h: number): string | null {
   const cx = w / 2, cy = h / 2;
   const midLng = (minLng + maxLng) / 2, midLat = (minLat + maxLat) / 2;
 
-  return path
+  return simplified
     .map((c, i) => {
       const x = cx + (c.lng - midLng) * scale;
       const y = cy - (c.lat - midLat) * scale;
