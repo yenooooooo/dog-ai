@@ -109,9 +109,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ routes: finalRoutes });
   } catch (err) {
     console.error('루트 생성 실패:', err);
+    const errMsg = err instanceof Error ? err.message : '';
     const status = err instanceof z.ZodError ? 400 : 500;
     return NextResponse.json(
-      { error: '루트 생성에 실패했어요.', code: err instanceof z.ZodError ? 'VALIDATION_ERROR' : 'INTERNAL_ERROR' },
+      { error: `루트 생성에 실패했어요. ${errMsg}`, code: err instanceof z.ZodError ? 'VALIDATION_ERROR' : 'INTERNAL_ERROR' },
       { status }
     );
   }
