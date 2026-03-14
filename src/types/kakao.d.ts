@@ -82,15 +82,20 @@ declare namespace kakao.maps {
   function load(callback: () => void): void;
 
   namespace event {
+    interface MouseEvent {
+      latLng: LatLng;
+      point: { x: number; y: number };
+    }
+
     function addListener(
       target: Map | Marker,
       type: string,
-      handler: (...args: unknown[]) => void
+      handler: (e: MouseEvent) => void
     ): void;
     function removeListener(
       target: Map | Marker,
       type: string,
-      handler: (...args: unknown[]) => void
+      handler: (e: MouseEvent) => void
     ): void;
   }
 

@@ -11,6 +11,8 @@ interface KakaoMapProps {
   currentPosition?: Coordinate | null;
   /** true면 현위치 변경 시 지도 중심을 따라감 */
   followPosition?: boolean;
+  /** 지도 클릭 시 좌표 반환 */
+  onMapClick?: (coord: Coordinate) => void;
   onMapReady?: (map: kakao.maps.Map) => void;
   className?: string;
 }
@@ -29,6 +31,7 @@ export default function KakaoMap({
   level = 3,
   currentPosition,
   followPosition = false,
+  onMapClick,
   onMapReady,
   className = 'h-full w-full',
 }: KakaoMapProps) {
@@ -69,6 +72,19 @@ export default function KakaoMap({
   useEffect(() => {
     if (isLoaded && map) onMapReady?.(map);
   }, [isLoaded, map, onMapReady]);
+
+  // 지도 클릭 이벤트
+  useEffect(() => {
+    if (!map || !isLoaded || !onMapClick) return;
+    const handler = (e: kakao.maps.event.MouseEvent) => {
+      const ll = e.latLng;
+      onMapClick({ lat: ll.getLat(), lng: ll.getLng() });
+    };
+    window.kakao.maps.event.addListener(map, 'click', handler);
+    return () => {
+      window.kakao.maps.event.removeListener(map, 'click', handler);
+    };
+  }, [map, isLoaded, onMapClick]);
 
   useEffect(() => {
     return () => {
