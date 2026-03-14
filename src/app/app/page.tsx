@@ -109,7 +109,7 @@ export default function AppMainPage() {
         </div>
       )}
 
-      <BottomSheet isExpanded={sheetExpanded} onToggle={setSheetExpanded} collapsedHeight={routes.length > 0 ? 280 : 200}>
+      <BottomSheet isExpanded={sheetExpanded} onToggle={setSheetExpanded} collapsedHeight={routes.length > 0 ? 300 : 260}>
         {routes.length === 0 ? (
           <>
             <h2 className="text-[20px] font-bold text-mw-gray-900">산책 시간</h2>
