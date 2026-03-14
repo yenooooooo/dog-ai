@@ -73,6 +73,7 @@ export async function GET(request: Request) {
       return {
         name: d.place_name,
         address: d.address_name,
+        phone: d.phone ?? '',
         lat: d.y,
         lng: d.x,
         category: d.category_name ?? '',

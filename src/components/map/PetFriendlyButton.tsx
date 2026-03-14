@@ -48,7 +48,7 @@ export default function PetFriendlyButton({ map, position, onSetOrigin }: PetFri
 
       // 카테고리 검색은 이미 애견동반 키워드 → 무조건 동반 가능 처리
       const items: PetPlaceInfo[] = (data.places ?? []).map((p: Record<string, string>) => ({
-        name: p.name, address: p.address, lat: Number(p.lat), lng: Number(p.lng),
+        name: p.name, address: p.address, phone: p.phone ?? '', lat: Number(p.lat), lng: Number(p.lng),
         category: p.category ?? '', petFriendly: 'yes',
       }));
       setPlaces(items);

@@ -1,11 +1,12 @@
 'use client';
 
-import { MapPin, Navigation, Dog, ExternalLink } from 'lucide-react';
+import { MapPin, Navigation, ExternalLink, Phone } from 'lucide-react';
 import type { Coordinate } from '@/types/route';
 
 interface PetPlaceInfo {
   name: string;
   address: string;
+  phone: string;
   lat: number;
   lng: number;
   category: string;
@@ -42,6 +43,12 @@ export default function PetPlacePopup({ place, onSetOrigin, onClose }: PetPlaceP
               <MapPin size={11} />
               <span>{place.address}</span>
             </div>
+            {place.phone && (
+              <a href={`tel:${place.phone}`} className="mt-1 flex items-center gap-1 text-[12px] text-mw-info">
+                <Phone size={11} />
+                <span>{place.phone}</span>
+              </a>
+            )}
           </div>
           <button onClick={onClose} className="p-1 text-[18px] text-mw-gray-400">✕</button>
         </div>
