@@ -91,7 +91,7 @@ export default function AppMainPage() {
 
       {mapInstance && selectedRoute && (
         <>
-          <RoutePolyline key={selectedRoute.id} map={mapInstance} path={selectedRoute.path} />
+          <RoutePolyline key={selectedRoute.id} map={mapInstance} path={selectedRoute.path} dashed={selectedRoute.id.startsWith('park-')} />
           <RouteDirectionMarkers key={`dir-${selectedRoute.id}`} map={mapInstance} path={selectedRoute.path} />
         </>
       )}

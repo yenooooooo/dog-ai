@@ -11,6 +11,7 @@ interface RoutePolylineProps {
   opacity?: number;
   weight?: number;
   fitBounds?: boolean;
+  dashed?: boolean;
 }
 
 export default function RoutePolyline({
@@ -20,6 +21,7 @@ export default function RoutePolyline({
   opacity = 0.8,
   weight = 5,
   fitBounds = true,
+  dashed = false,
 }: RoutePolylineProps) {
   const polylineRef = useRef<kakao.maps.Polyline | null>(null);
 
@@ -35,7 +37,7 @@ export default function RoutePolyline({
       strokeWeight: weight,
       strokeColor: color,
       strokeOpacity: opacity,
-      strokeStyle: 'solid',
+      strokeStyle: dashed ? 'shortdash' : 'solid',
     });
     polyline.setMap(map);
     polylineRef.current = polyline;
@@ -58,7 +60,7 @@ export default function RoutePolyline({
       polyline.setMap(null);
       polylineRef.current = null;
     };
-  }, [map, path, color, opacity, weight, fitBounds]);
+  }, [map, path, color, opacity, weight, fitBounds, dashed]);
 
   return null;
 }

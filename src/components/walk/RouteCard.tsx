@@ -56,6 +56,7 @@ function pathToSvg(path: Coordinate[], w: number, h: number): string | null {
 export default function RouteCard({ route, isSelected, onSelect, onStartWalk }: RouteCardProps) {
   const [isFav, setIsFav] = useState(() => isFavoriteRoute(route.id));
   const svgPath = pathToSvg(route.path, 280, 120);
+  const isPark = route.id.startsWith('park-');
 
   const handleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -75,7 +76,7 @@ export default function RouteCard({ route, isSelected, onSelect, onStartWalk }: 
       <div className="flex h-[120px] items-center justify-center rounded-xl bg-mw-gray-50">
         {svgPath ? (
           <svg width="280" height="120" viewBox="0 0 280 120" className="w-full">
-            <path d={svgPath} fill="none" stroke="#2D8A42" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d={svgPath} fill="none" stroke="#2D8A42" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray={isPark ? '8 4' : 'none'} />
           </svg>
         ) : (
           <Route size={24} className="text-mw-gray-300" strokeWidth={1.75} />
@@ -90,7 +91,7 @@ export default function RouteCard({ route, isSelected, onSelect, onStartWalk }: 
         ))}
       </div>
 
-      <p className="mt-2 text-[10px] text-mw-gray-300">📌 참고 경로입니다 — 안전한 인도와 산책로로 걸어주세요</p>
+      <p className="mt-2 text-[10px] text-mw-gray-300">{isPark ? '🌳 공원 안에서 자유롭게 걸어보세요' : '📌 참고 경로 — 안전한 인도와 산책로로 걸어주세요'}</p>
 
       <div className="mt-2 flex items-center gap-4 text-[13px] text-mw-gray-500">
         <span className="flex items-center gap-1"><Route size={14} strokeWidth={1.75} />{formatDistance(route.totalDistance)}</span>

@@ -5,6 +5,8 @@ import { generateWaypoints, adjustRadius } from '@/lib/route-generator';
 import { fetchWalkingRoute as fetchKakaoRoute } from '@/lib/kakao/route-api';
 import { fetchGoogleWalkingRoute } from '@/lib/google/walking-route';
 import { snapWaypointsToRoad } from '@/lib/kakao/snap-to-road';
+import { detectNearbyPark } from '@/lib/kakao/park-detect';
+import { generateParkRoutes } from '@/lib/park-route-generator';
 import type { GeneratedRoute, RouteSegment } from '@/types/route';
 import type { Coordinate } from '@/types/route';
 
@@ -76,6 +78,15 @@ export async function POST(request: Request) {
     const { origin, durationMinutes, petSize } = requestSchema.parse(body);
     const walkSpeed = petSize === 'small' ? 50 : petSize === 'large' ? 83 : 67;
     const kakaoKey = process.env.KAKAO_REST_API_KEY ?? '';
+
+    // 공원 모드: 출발 위치 근처 200m 안에 공원이면 원형 가이드 생성
+    if (kakaoKey) {
+      const park = await detectNearbyPark(origin, kakaoKey);
+      if (park) {
+        const parkRoutes = generateParkRoutes(origin, park.name, durationMinutes, petSize);
+        return NextResponse.json({ routes: parkRoutes });
+      }
+    }
 
     let currentRadius: number | undefined;
     let finalRoutes: GeneratedRoute[] = [];
