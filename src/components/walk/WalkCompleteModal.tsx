@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { Timer, Route, Zap, Camera } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Timer, Route, Zap, Flame, Camera, Share2 } from 'lucide-react';
 
 import ShareCardPreview from '@/components/walk/ShareCardPreview';
+import { pathToSvg } from '@/lib/path-to-svg';
+import { getWalkCompleteMessage } from '@/lib/walk-messages';
 import type { Coordinate } from '@/types/route';
 
 interface WalkCompleteModalProps {
@@ -15,104 +17,76 @@ interface WalkCompleteModalProps {
   onConfirm: () => void;
 }
 
-function formatTime(sec: number): string {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}분 ${s}초`;
-}
-
 export default function WalkCompleteModal({
-  distance,
-  durationSec,
-  coordinates,
-  petName,
-  photoCount = 0,
-  onConfirm,
+  distance, durationSec, coordinates, petName, photoCount = 0, onConfirm,
 }: WalkCompleteModalProps) {
   const [showShare, setShowShare] = useState(false);
   const km = (distance / 1000).toFixed(2);
-  const avgSpeed =
-    durationSec > 0 ? ((distance / durationSec) * 60).toFixed(0) : '0';
+  const mins = Math.round(durationSec / 60);
+  const avgSpeed = durationSec > 0 ? ((distance / durationSec) * 60).toFixed(0) : '0';
+  const kcal = Math.round((distance / 1000) * 65 * 0.5);
+  const svg = useMemo(() => pathToSvg(coordinates, 280, 120), [coordinates]);
+  const message = useMemo(() => getWalkCompleteMessage(petName, km), [petName, km]);
 
   if (showShare) {
     return (
-      <ShareCardPreview
-        coordinates={coordinates}
-        distance={distance}
-        durationSec={durationSec}
-        petName={petName}
-        onBack={() => setShowShare(false)}
-        onConfirm={onConfirm}
-      />
+      <ShareCardPreview coordinates={coordinates} distance={distance} durationSec={durationSec} petName={petName} onBack={() => setShowShare(false)} onConfirm={onConfirm} />
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="mx-6 w-full max-w-sm rounded-mw-lg bg-white px-6 py-7">
-        <h2 className="text-center text-[20px] font-bold text-mw-gray-900">
-          산책 완료!
-        </h2>
-        <p className="mt-1 text-center text-[13px] text-mw-gray-500">
-          오늘도 좋은 산책이었어요
-        </p>
-
-        <div className="mt-5 flex gap-3">
-          <StatCard
-            icon={<Route size={20} className="text-mw-green-500" />}
-            label="거리"
-            value={`${km}km`}
-          />
-          <StatCard
-            icon={<Timer size={20} className="text-mw-green-500" />}
-            label="시간"
-            value={formatTime(durationSec)}
-          />
-          <StatCard
-            icon={<Zap size={20} className="text-mw-amber-500" />}
-            label="평균 속도"
-            value={`${avgSpeed}m/분`}
-          />
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center">
+      <div className="w-full max-w-sm animate-slide-up rounded-t-mw-xl bg-gradient-to-b from-mw-green-50 to-white px-6 pb-8 pt-6 sm:mx-6 sm:rounded-mw-xl">
+        {/* 경로 미니맵 */}
+        <div className="flex h-[120px] items-center justify-center rounded-mw-lg bg-white/80">
+          {svg ? (
+            <svg width="280" height="120" viewBox="0 0 280 120">
+              <path d={svg.d} fill="none" stroke="#2D8A42" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx={svg.startX} cy={svg.startY} r="4" fill="#2D8A42" />
+            </svg>
+          ) : (
+            <Route size={32} className="text-mw-gray-300" />
+          )}
         </div>
 
-        {photoCount > 0 && (
-          <div className="mt-3 flex items-center justify-center gap-1.5 text-[13px] text-mw-gray-500">
-            <Camera size={14} />
-            <span>사진 {photoCount}장</span>
-          </div>
-        )}
+        {/* 축하 메시지 */}
+        <p className="mt-4 text-center text-[15px] font-bold text-mw-gray-900">{message}</p>
 
-        <button
-          onClick={() => setShowShare(true)}
-          className="mt-4 w-full rounded-mw border border-mw-gray-200 py-3 text-[14px] font-medium text-mw-gray-600 transition-transform active:scale-[0.97]"
-        >
-          공유 카드 만들기
-        </button>
-        <button
-          onClick={onConfirm}
-          className="mt-2 w-full rounded-mw bg-mw-green-500 py-3.5 text-[15px] font-semibold text-white transition-transform active:scale-[0.97]"
-        >
-          확인
-        </button>
+        {/* 핵심 숫자 (큰 숫자) */}
+        <div className="mt-4 flex items-end justify-center gap-1">
+          <span className="text-[40px] font-extrabold leading-none text-mw-green-500">{km}</span>
+          <span className="pb-1 text-[16px] font-semibold text-mw-green-400">km</span>
+        </div>
+
+        {/* 상세 통계 */}
+        <div className="mt-4 grid grid-cols-4 gap-2">
+          <Stat icon={<Timer size={14} className="text-mw-green-500" />} label="시간" value={`${mins}분`} />
+          <Stat icon={<Zap size={14} className="text-mw-amber-500" />} label="속도" value={`${avgSpeed}m/분`} />
+          <Stat icon={<Flame size={14} className="text-mw-danger" />} label="칼로리" value={`${kcal}kcal`} />
+          <Stat icon={<Camera size={14} className="text-mw-info" />} label="사진" value={`${photoCount}장`} />
+        </div>
+
+        {/* 버튼 */}
+        <div className="mt-5 flex gap-2">
+          <button onClick={() => setShowShare(true)} className="flex flex-1 items-center justify-center gap-2 rounded-mw bg-mw-green-50 py-3.5 text-[14px] font-semibold text-mw-green-600 active:scale-[0.97]">
+            <Share2 size={16} />
+            공유 카드
+          </button>
+          <button onClick={onConfirm} className="flex flex-1 items-center justify-center rounded-mw bg-mw-green-500 py-3.5 text-[15px] font-semibold text-white active:scale-[0.97]">
+            완료
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-function StatCard({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
+function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="flex flex-1 flex-col items-center gap-1 rounded-mw-sm bg-mw-gray-50 py-3">
+    <div className="flex flex-col items-center gap-0.5 rounded-mw-sm bg-white/80 py-2.5">
       {icon}
-      <span className="text-[11px] text-mw-gray-500">{label}</span>
-      <span className="text-[14px] font-bold text-mw-gray-900">{value}</span>
+      <span className="text-[10px] text-mw-gray-400">{label}</span>
+      <span className="text-[13px] font-bold text-mw-gray-900">{value}</span>
     </div>
   );
 }
