@@ -29,8 +29,9 @@ export default function WalkDetailActions({ walkId }: WalkDetailActionsProps) {
     setDeleting(true);
     try {
       const supabase = createClient();
-      const { error } = await supabase.from('mw_walks').delete().eq('id', walkId);
+      const { error, count } = await supabase.from('mw_walks').delete({ count: 'exact' }).eq('id', walkId);
       if (error) throw error;
+      if (count === 0) throw new Error('삭제 권한이 없어요');
       toast.success('삭제되었어요');
       router.replace('/app/history');
     } catch {
