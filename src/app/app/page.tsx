@@ -119,7 +119,7 @@ export default function AppMainPage() {
         </div>
       )}
 
-      <BottomSheet isExpanded={sheetExpanded} onToggle={setSheetExpanded} collapsedHeight={routes.length > 0 ? 300 : pets.length > 0 ? 310 : 260}>
+      <BottomSheet isExpanded={sheetExpanded} onToggle={setSheetExpanded} collapsedHeight={routes.length > 0 ? 320 : pets.length > 0 ? 350 : 300}>
         <MainBottomContent
           duration={duration} onDurationChange={setDuration}
           pets={pets} selectedPet={selectedPet} onSelectPet={setSelectedPet}
