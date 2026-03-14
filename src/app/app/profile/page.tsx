@@ -26,11 +26,16 @@ export default function ProfilePage() {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) return;
 
-      const { data: mwUser } = await supabase
+      let { data: mwUser } = await supabase
         .from('mw_users')
         .select('nickname, neighborhood')
         .eq('auth_id', authUser.id)
         .single();
+
+      if (!mwUser) {
+        await supabase.from('mw_users').insert({ auth_id: authUser.id, nickname: authUser.email?.split('@')[0] ?? '견주' });
+        ({ data: mwUser } = await supabase.from('mw_users').select('nickname, neighborhood').eq('auth_id', authUser.id).single());
+      }
 
       if (mwUser) setUser(mwUser);
 
