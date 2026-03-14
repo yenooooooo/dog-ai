@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { searchPublicPetPlaces } from '@/lib/kakao/public-pet-data';
 
 // 반려견 동반 가능 판별 키워드
 const PET_FRIENDLY_KEYWORDS = [
@@ -16,10 +17,12 @@ const PET_FRIENDLY_CATEGORIES: Record<string, boolean> = {
   '해수욕장': true,
 };
 
+type PetStatus = 'verified' | 'yes' | 'maybe' | 'unknown' | 'banned';
+
 function checkPetFriendly(
   name: string,
   category: string
-): 'yes' | 'maybe' | 'unknown' {
+): PetStatus {
   const text = `${name} ${category}`.toLowerCase();
   // 이름/카테고리에 반려견 키워드 포함
   if (PET_FRIENDLY_KEYWORDS.some((kw) => text.includes(kw))) return 'yes';
@@ -66,10 +69,15 @@ export async function GET(request: Request) {
       (petData.documents ?? []).map((d: Record<string, string>) => d.place_name)
     );
 
+    // 3차: 공공데이터 교차 확인 (API 키 있을 때만)
+    const publicPlaces = await searchPublicPetPlaces(query);
+    const publicNames = new Set(publicPlaces.map((p) => p.name));
+
     const places = (data.documents ?? []).map((d: Record<string, string>) => {
-      let petFriendly = checkPetFriendly(d.place_name, d.category_name ?? '');
-      // 2차 검색에서 같은 이름 발견 → 확실히 동반 가능
+      let petFriendly: PetStatus = checkPetFriendly(d.place_name, d.category_name ?? '');
       if (petPlaceNames.has(d.place_name)) petFriendly = 'yes';
+      // 공공데이터에서 확인됨 → verified
+      if (publicNames.has(d.place_name)) petFriendly = 'verified';
       return {
         name: d.place_name,
         address: d.address_name,

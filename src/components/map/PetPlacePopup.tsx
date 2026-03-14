@@ -20,9 +20,11 @@ interface PetPlacePopupProps {
 }
 
 const PET_LABEL: Record<string, { text: string; cls: string }> = {
-  yes: { text: '🐾 동반 가능', cls: 'bg-mw-green-50 text-mw-green-600' },
-  maybe: { text: '🐾 동반 가능성', cls: 'bg-mw-amber-400/10 text-mw-amber-500' },
-  unknown: { text: '확인 필요', cls: 'bg-mw-gray-100 text-mw-gray-500' },
+  verified: { text: '✅ 동반 확인됨', cls: 'bg-mw-green-50 text-mw-green-600' },
+  yes: { text: '🐾 동반 추정', cls: 'bg-mw-green-50 text-mw-green-600' },
+  maybe: { text: '🔍 확인 권장', cls: 'bg-mw-amber-400/10 text-mw-amber-500' },
+  unknown: { text: '❓ 전화 확인', cls: 'bg-mw-gray-100 text-mw-gray-500' },
+  banned: { text: '🚫 출입 불가', cls: 'bg-red-50 text-mw-danger' },
 };
 
 export default function PetPlacePopup({ place, onSetOrigin, onClose }: PetPlacePopupProps) {
@@ -61,6 +63,7 @@ export default function PetPlacePopup({ place, onSetOrigin, onClose }: PetPlaceP
             <Navigation size={13} /> 출발 위치로
           </button>
         </div>
+        <p className="mt-2 text-center text-[10px] text-mw-gray-300">방문 전 매장에 전화로 동반 가능 여부를 확인해주세요</p>
       </div>
     </div>
   );

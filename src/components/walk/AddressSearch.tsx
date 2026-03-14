@@ -5,6 +5,7 @@ import { Search, MapPin, X, Dog } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { cn } from '@/lib/utils';
+import { checkCrowdsourcedPetStatus, combinePetStatus } from '@/lib/pet-friendly-check';
 import type { Coordinate } from '@/types/route';
 
 interface AddressSearchProps {
@@ -21,9 +22,11 @@ interface Place {
 }
 
 const PET_LABEL = {
-  yes: { text: '동반 가능', cls: 'bg-mw-green-50 text-mw-green-600' },
-  maybe: { text: '동반 가능성', cls: 'bg-mw-amber-400/10 text-mw-amber-500' },
-  unknown: { text: '확인 필요', cls: 'bg-mw-gray-100 text-mw-gray-500' },
+  verified: { text: '동반 확인됨', cls: 'bg-mw-green-50 text-mw-green-600' },
+  yes: { text: '동반 추정', cls: 'bg-mw-green-50 text-mw-green-600' },
+  maybe: { text: '확인 권장', cls: 'bg-mw-amber-400/10 text-mw-amber-500' },
+  unknown: { text: '전화 확인', cls: 'bg-mw-gray-100 text-mw-gray-500' },
+  banned: { text: '출입 불가', cls: 'bg-red-50 text-mw-danger' },
 };
 
 export default function AddressSearch({ onSelect }: AddressSearchProps) {
@@ -39,7 +42,11 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
       const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setResults(data.places ?? []);
+      const enhanced = (data.places ?? []).map((p: Place) => {
+        const crowd = checkCrowdsourcedPetStatus(Number(p.lat), Number(p.lng));
+        return { ...p, petFriendly: combinePetStatus(p.petFriendly, crowd) };
+      });
+      setResults(enhanced);
       if (data.places.length === 0) toast.info('검색 결과가 없어요.');
     } catch { toast.error('장소 검색에 실패했어요.'); }
     finally { setLoading(false); }
