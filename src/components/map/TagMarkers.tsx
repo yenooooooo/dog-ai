@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
+import { blockMapClick } from '@/lib/map-click-guard';
 import { TAG_META } from '@/lib/tag-constants';
 import type { StoredTag } from '@/lib/tag-storage';
 
@@ -37,7 +38,7 @@ export default function TagMarkers({ map, tags, onTagClick }: TagMarkersProps) {
       ">${meta.emoji}</div>`;
 
       if (onTagClick) {
-        el.addEventListener('click', (e) => { e.stopPropagation(); onTagClick(tag); });
+        el.addEventListener('click', () => { blockMapClick(); onTagClick(tag); });
       }
 
       const overlay = new window.kakao.maps.CustomOverlay({

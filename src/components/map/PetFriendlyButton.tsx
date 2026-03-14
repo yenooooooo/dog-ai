@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { Dog, X } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { blockMapClick } from '@/lib/map-click-guard';
 import PetPlacePopup, { type PetPlaceInfo } from '@/components/map/PetPlacePopup';
 import type { Coordinate } from '@/types/route';
 
@@ -54,7 +55,7 @@ export default function PetFriendlyButton({ map, position, onSetOrigin }: PetFri
       const newOverlays = items.map((p) => {
         const el = document.createElement('div');
         el.innerHTML = `<div style="background:#2D8A42;color:white;padding:4px 10px;border-radius:10px;font-size:11px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.2);white-space:nowrap;cursor:pointer;">🐾 ${p.name}</div>`;
-        el.addEventListener('click', (e) => { e.stopPropagation(); setSelected(p); });
+        el.addEventListener('click', () => { blockMapClick(); setSelected(p); });
         const ov = new window.kakao.maps.CustomOverlay({
           content: el, position: new window.kakao.maps.LatLng(p.lat, p.lng), yAnchor: 1.3,
         });

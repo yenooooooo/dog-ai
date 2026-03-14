@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 
 import { useKakaoMap } from '@/hooks/useKakaoMap';
+import { isMapClickBlocked } from '@/lib/map-click-guard';
 import type { Coordinate } from '@/types/route';
 
 interface KakaoMapProps {
@@ -77,6 +78,7 @@ export default function KakaoMap({
   useEffect(() => {
     if (!map || !isLoaded || !onMapClick) return;
     const handler = (e: kakao.maps.event.MouseEvent) => {
+      if (isMapClickBlocked()) return;
       const ll = e.latLng;
       onMapClick({ lat: ll.getLat(), lng: ll.getLng() });
     };
