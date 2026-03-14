@@ -18,8 +18,8 @@ const WALKING_SPEED_M_PER_MIN = 67;
 const ROAD_DETOUR_FACTOR = 1.3;
 // 삼각형 꼭짓점 = 웨이포인트 3개
 const WP_COUNT = 3;
-// 3개 루트의 회전 오프셋(도)
-const ROTATIONS = [0, 40, 80];
+// 3개 루트 간 간격(도) — 서로 충분히 다른 방향
+const ROUTE_SPREAD = 40;
 
 const ROUTE_NAMES = ['공원 경유 코스', '한적한 길 코스', '카페 근처 코스'];
 const ROUTE_TAGS: string[][] = [
@@ -52,12 +52,15 @@ export function generateWaypoints(
   const radius =
     radiusOverride ?? (targetDistance / (2 * Math.PI)) * ROAD_DETOUR_FACTOR;
 
-  // 스텝 3: 루트 3개 생성 (각각 다른 회전 방향)
-  const routes = ROTATIONS.map((rotation, idx) => {
+  // 스텝 3: 루트 3개 생성 (랜덤 기준 방향 + 간격)
+  const baseRotation = Math.random() * 360;
+  const rotations = [0, ROUTE_SPREAD, ROUTE_SPREAD * 2];
+
+  const routes = rotations.map((rotation, idx) => {
     const waypoints: Coordinate[] = [];
     for (let i = 0; i < WP_COUNT; i++) {
       // 120° 간격 + 루트별 회전 오프셋
-      const bearing = (360 / WP_COUNT) * i + rotation;
+      const bearing = (360 / WP_COUNT) * i + baseRotation + rotation;
       waypoints.push(getPointAtBearing(origin, bearing, radius));
     }
     return {
