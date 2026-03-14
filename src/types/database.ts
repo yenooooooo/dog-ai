@@ -63,7 +63,8 @@ export type TagType =
   | 'off_leash'
   | 'traffic'
   | 'scenic'
-  | 'pet_friendly';
+  | 'pet_friendly'
+  | 'trash_bin';
 
 export interface TagVote {
   id: string;

@@ -14,6 +14,7 @@ import WalkStats from '@/components/walk/WalkStats';
 import WalkActionBar from '@/components/walk/WalkActionBar';
 import WalkCompleteModal from '@/components/walk/WalkCompleteModal';
 import WalkTagManager from '@/components/walk/WalkTagManager';
+import NightWarning from '@/components/walk/NightWarning';
 import RoutePolyline from '@/components/map/RoutePolyline';
 
 const KakaoMap = dynamic(() => import('@/components/map/KakaoMap'), {
@@ -29,6 +30,7 @@ export default function WalkPage() {
   const [result, setResult] = useState<WalkResult | null>(null);
   const [showTags, setShowTags] = useState(false);
   const [petName, setPetName] = useState<string | undefined>();
+  const [petId, setPetId] = useState<string | undefined>();
 
   useEffect(() => {
     const sb = createClient();
@@ -36,8 +38,8 @@ export default function WalkPage() {
       if (!user) return;
       const { data: mu } = await sb.from('mw_users').select('id').eq('auth_id', user.id).single();
       if (!mu) return;
-      const { data: pets } = await sb.from('mw_pets').select('name').eq('user_id', mu.id).limit(1);
-      if (pets?.[0]) setPetName(pets[0].name);
+      const { data: pets } = await sb.from('mw_pets').select('id, name').eq('user_id', mu.id).limit(1);
+      if (pets?.[0]) { setPetName(pets[0].name); setPetId(pets[0].id); }
     });
   }, []);
 
@@ -66,6 +68,7 @@ export default function WalkPage() {
           distanceMeters: Math.round(result.distance),
           durationSeconds: result.durationSec,
           coordinates: result.coordinates,
+          petId,
         });
         toast.success('산책 기록이 저장되었어요!');
       } catch { toast.error('기록 저장에 실패했어요.'); }
@@ -87,6 +90,7 @@ export default function WalkPage() {
       )}
 
       <WalkTagManager map={mapInstance} position={position} isOpen={showTags} onClose={() => setShowTags(false)} />
+      <NightWarning />
 
       {!isWalking && (gpsLoading || gpsError) && (
         <div className="absolute left-5 top-3 z-30 rounded-mw bg-white/90 px-3 py-2 shadow-sm backdrop-blur">

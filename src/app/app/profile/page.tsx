@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/lib/supabase/client';
 import UserForm from '@/components/profile/UserForm';
 import PetCard from '@/components/profile/PetCard';
+import UsageGuide from '@/components/layout/UsageGuide';
 import type { StoredUser, StoredPet } from '@/lib/profile-storage';
 
 export default function ProfilePage() {
@@ -134,6 +135,8 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+
+        <UsageGuide />
       </div>
     </div>
   );

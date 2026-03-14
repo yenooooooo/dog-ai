@@ -9,7 +9,13 @@
 import type { Coordinate } from '@/types/route';
 import { getPointAtBearing } from './geo-utils';
 
-const WALKING_SPEED_M_PER_MIN = 67;
+// 크기별 도보 속도 (m/분)
+const SPEED_BY_SIZE: Record<string, number> = {
+  small: 50,   // 시속 3km
+  medium: 67,  // 시속 4km
+  large: 83,   // 시속 5km
+};
+const DEFAULT_SPEED = 67;
 const ROAD_DETOUR_FACTOR = 1.3;
 const WP_COUNT = 3;
 const ROUTE_SPREAD = 40;
@@ -38,9 +44,11 @@ export interface WaypointSet {
 export function generateWaypoints(
   origin: Coordinate,
   durationMinutes: number,
-  radiusOverride?: number
+  radiusOverride?: number,
+  petSize?: string
 ): { routes: WaypointSet[]; radius: number; targetDistance: number } {
-  const targetDistance = durationMinutes * WALKING_SPEED_M_PER_MIN;
+  const speed = SPEED_BY_SIZE[petSize ?? ''] ?? DEFAULT_SPEED;
+  const targetDistance = durationMinutes * speed;
 
   // 반경: 최소 MIN_RADIUS 보장
   const calculated = (targetDistance / (2 * Math.PI)) * ROAD_DETOUR_FACTOR;

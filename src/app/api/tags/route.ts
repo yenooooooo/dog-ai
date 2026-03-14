@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 
 const TAG_TYPES = [
   'shade', 'water', 'danger', 'big_dog',
-  'off_leash', 'traffic', 'scenic', 'pet_friendly',
+  'off_leash', 'traffic', 'scenic', 'pet_friendly', 'trash_bin',
 ] as const;
 
 const createTagSchema = z.object({

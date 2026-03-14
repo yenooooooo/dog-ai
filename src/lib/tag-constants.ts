@@ -16,6 +16,7 @@ export const TAG_META: Record<TagType, TagMeta> = {
   traffic: { type: 'traffic', emoji: '🚗', label: '차 많음', color: '#6B6B67' },
   scenic: { type: 'scenic', emoji: '✨', label: '뷰 좋음', color: '#FBBF24' },
   pet_friendly: { type: 'pet_friendly', emoji: '🏪', label: '반려견 가게', color: '#4ADE80' },
+  trash_bin: { type: 'trash_bin', emoji: '🗑️', label: '쓰레기통', color: '#78716C' },
 };
 
 export const TAG_TYPES = Object.values(TAG_META);

@@ -8,6 +8,7 @@ import type { GeneratedRoute, RouteSegment } from '@/types/route';
 const requestSchema = z.object({
   origin: z.object({ lat: z.number(), lng: z.number() }),
   durationMinutes: z.number().min(5).max(120),
+  petSize: z.enum(['small', 'medium', 'large']).optional(),
 });
 
 const MAX_RETRIES = 3;
@@ -15,7 +16,7 @@ const MAX_RETRIES = 3;
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { origin, durationMinutes } = requestSchema.parse(body);
+    const { origin, durationMinutes, petSize } = requestSchema.parse(body);
 
     let currentRadius: number | undefined;
     let finalRoutes: GeneratedRoute[] = [];
@@ -25,7 +26,8 @@ export async function POST(request: Request) {
       const { routes, radius, targetDistance } = generateWaypoints(
         origin,
         durationMinutes,
-        currentRadius
+        currentRadius,
+        petSize
       );
 
       // 3개 루트를 병렬로 Kakao API 호출

@@ -1,5 +1,6 @@
 import BottomNav from '@/components/layout/BottomNav';
 import IosPwaPrompt from '@/components/layout/IosPwaPrompt';
+import OnboardingModal from '@/components/layout/OnboardingModal';
 
 export default function AppLayout({
   children,
@@ -11,6 +12,7 @@ export default function AppLayout({
       <main className="relative flex-1 overflow-y-auto">{children}</main>
       <BottomNav />
       <IosPwaPrompt />
+      <OnboardingModal />
     </div>
   );
 }

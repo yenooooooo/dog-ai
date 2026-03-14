@@ -7,6 +7,7 @@ export async function saveWalkToDb(params: {
   distanceMeters: number;
   durationSeconds: number;
   coordinates: Coordinate[];
+  petId?: string;
 }): Promise<void> {
   const sb = createClient();
   const { data: { user } } = await sb.auth.getUser();
@@ -18,6 +19,7 @@ export async function saveWalkToDb(params: {
 
   const { error } = await sb.from('mw_walks').insert({
     user_id: mu.id,
+    pet_id: params.petId ?? null,
     started_at: params.startedAt,
     ended_at: new Date().toISOString(),
     distance_meters: params.distanceMeters,

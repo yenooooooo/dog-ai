@@ -7,7 +7,7 @@ interface RouteState {
   selectedIndex: number;
   isGenerating: boolean;
   error: string | null;
-  generateRoutes: (origin: Coordinate, durationMinutes: number) => Promise<void>;
+  generateRoutes: (origin: Coordinate, durationMinutes: number, petSize?: string) => Promise<void>;
   selectRoute: (index: number) => void;
   reset: () => void;
 }
@@ -18,13 +18,13 @@ export const useRouteStore = create<RouteState>((set) => ({
   isGenerating: false,
   error: null,
 
-  generateRoutes: async (origin, durationMinutes) => {
+  generateRoutes: async (origin, durationMinutes, petSize) => {
     set({ isGenerating: true, error: null, routes: [] });
     try {
       const res = await fetch('/api/route/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ origin, durationMinutes }),
+        body: JSON.stringify({ origin, durationMinutes, petSize }),
       });
 
       if (!res.ok) {
