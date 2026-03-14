@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut, Plus, User, GraduationCap, ChevronRight } from 'lucide-react';
+import { LogOut, Plus, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/lib/supabase/client';
 import UserForm from '@/components/profile/UserForm';
 import PetCard from '@/components/profile/PetCard';
-import UsageGuide from '@/components/layout/UsageGuide';
+import ProfileMenus from '@/components/profile/ProfileMenus';
 import type { StoredUser, StoredPet } from '@/lib/profile-storage';
 
 export default function ProfilePage() {
@@ -134,16 +134,8 @@ export default function ProfilePage() {
           )}
         </div>
 
-        <button onClick={() => router.push('/app/profile/training')} className="mt-5 flex w-full items-center gap-3 rounded-mw-lg border border-mw-gray-100 bg-white px-4 py-4">
-          <GraduationCap size={22} className="text-mw-green-500" />
-          <div className="flex-1 text-left">
-            <p className="text-[15px] font-semibold text-mw-gray-900">훈련 가이드</p>
-            <p className="text-[12px] text-mw-gray-400">AI 맞춤 훈련법 + 단계별 가이드</p>
-          </div>
-          <ChevronRight size={16} className="text-mw-gray-400" />
-        </button>
+        <ProfileMenus />
 
-        <UsageGuide />
       </div>
     </div>
   );
