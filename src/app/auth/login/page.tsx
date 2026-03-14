@@ -2,14 +2,15 @@
 
 import Link from 'next/link';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const REDIRECT_TO = typeof window !== 'undefined'
-  ? `${window.location.origin}/auth/callback`
-  : '';
-
-const KAKAO_AUTH_URL = `${SUPABASE_URL}/auth/v1/authorize?provider=kakao&redirect_to=${encodeURIComponent(REDIRECT_TO)}&scopes=profile_nickname%20profile_image`;
-
 export default function LoginPage() {
+  const handleLogin = () => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const redirectTo = encodeURIComponent(
+      `${window.location.origin}/auth/callback`
+    );
+    window.location.href = `${supabaseUrl}/auth/v1/authorize?provider=kakao&redirect_to=${redirectTo}&scopes=profile_nickname%20profile_image`;
+  };
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-mw-gray-50 px-5">
       <Link href="/" className="text-[28px] font-extrabold text-mw-green-500">
@@ -20,8 +21,8 @@ export default function LoginPage() {
       </p>
 
       <div className="mt-10 w-full max-w-sm">
-        <a
-          href={KAKAO_AUTH_URL}
+        <button
+          onClick={handleLogin}
           className="flex w-full items-center justify-center gap-2 rounded-mw bg-[#FEE500] py-4 text-[15px] font-semibold text-[#191919] transition-transform active:scale-[0.97]"
         >
           <svg width="18" height="18" viewBox="0 0 18 18">
@@ -31,7 +32,7 @@ export default function LoginPage() {
             />
           </svg>
           카카오로 시작하기
-        </a>
+        </button>
       </div>
 
       <p className="mt-8 text-center text-[12px] text-mw-gray-400">
