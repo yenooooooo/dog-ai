@@ -23,7 +23,7 @@ export default function TagDetailPopup({
   const timeAgo = getTimeAgo(tag.createdAt);
 
   return (
-    <div className="absolute bottom-28 left-4 right-4 z-50 animate-slide-up">
+    <div className="absolute bottom-40 left-4 right-4 z-50 animate-slide-up">
       <div className="rounded-mw-lg bg-white p-4 shadow-lg">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">

@@ -36,7 +36,7 @@ export default function WalkTagManager({
     setTags(getTags());
   }, []);
 
-  const handleCreate = (tagType: TagType, description: string | null) => {
+  const handleCreate = async (tagType: TagType, description: string | null) => {
     if (!position) {
       toast.error('현재 위치를 확인할 수 없어요.');
       return;
@@ -45,6 +45,17 @@ export default function WalkTagManager({
     setTags((prev) => [tag, ...prev]);
     onClose();
     toast.success('태그가 등록되었어요!');
+
+    // Supabase에도 저장 (베스트 에포트 — 실패해도 로컬은 이미 저장됨)
+    try {
+      await fetch('/api/tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tagType, description, location: position }),
+      });
+    } catch {
+      // 서버 저장 실패는 무시 (로컬에 이미 저장됨)
+    }
   };
 
   const handleTagClick = useCallback((tag: StoredTag) => {

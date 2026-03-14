@@ -38,7 +38,7 @@ export default function AppMainPage() {
   const [pets, setPets] = useState<PetInfo[]>([]);
   const [selectedPet, setSelectedPet] = useState<PetInfo | null>(null);
 
-  const { routes, selectedIndex, isGenerating, error: routeError, generateRoutes, selectRoute, reset } = useRouteStore();
+  const { routes, selectedIndex, isGenerating, error: routeError, generateRoutes, selectRoute, setSelectedPet: setStorePet, reset } = useRouteStore();
   const center = position ?? DEFAULT_CENTER;
   const selectedRoute = routes[selectedIndex] ?? null;
   const origin = customOrigin ?? position;
@@ -62,9 +62,10 @@ export default function AppMainPage() {
 
   const handleGenerate = useCallback(async () => {
     if (!origin) { toast.error('출발 위치를 지정해주세요.'); return; }
+    setStorePet(selectedPet?.id ?? null, selectedPet?.name ?? null);
     await generateRoutes(origin, duration, selectedPet?.size ?? undefined);
     setSheetExpanded(true);
-  }, [origin, duration, generateRoutes, selectedPet]);
+  }, [origin, duration, generateRoutes, selectedPet, setStorePet]);
 
   const handleReset = () => { reset(); setCustomOrigin(null); };
 
@@ -118,7 +119,14 @@ export default function AppMainPage() {
             <button onClick={handleGenerate} disabled={isGenerating || !origin} className="mt-3 w-full rounded-mw bg-mw-green-500 py-3.5 text-[15px] font-semibold text-white transition-transform active:scale-[0.97] disabled:opacity-40">
               {isGenerating ? '루트 생성 중...' : '루트 만들기'}
             </button>
-            {routeError && <p className="mt-2 text-center text-[13px] text-mw-danger">{routeError}</p>}
+            {routeError && (
+              <div className="mt-2 text-center">
+                <p className="text-[13px] text-mw-danger">{routeError}</p>
+                <button onClick={handleReset} className="mt-1 text-[13px] font-medium text-mw-green-500">
+                  다시 시도
+                </button>
+              </div>
+            )}
           </>
         ) : (
           <>

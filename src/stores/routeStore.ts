@@ -7,8 +7,11 @@ interface RouteState {
   selectedIndex: number;
   isGenerating: boolean;
   error: string | null;
+  selectedPetId: string | null;
+  selectedPetName: string | null;
   generateRoutes: (origin: Coordinate, durationMinutes: number, petSize?: string) => Promise<void>;
   selectRoute: (index: number) => void;
+  setSelectedPet: (id: string | null, name: string | null) => void;
   reset: () => void;
 }
 
@@ -17,6 +20,8 @@ export const useRouteStore = create<RouteState>((set) => ({
   selectedIndex: 0,
   isGenerating: false,
   error: null,
+  selectedPetId: null,
+  selectedPetName: null,
 
   generateRoutes: async (origin, durationMinutes, petSize) => {
     set({ isGenerating: true, error: null, routes: [] });
@@ -43,6 +48,8 @@ export const useRouteStore = create<RouteState>((set) => ({
   },
 
   selectRoute: (index) => set({ selectedIndex: index }),
+
+  setSelectedPet: (id, name) => set({ selectedPetId: id, selectedPetName: name }),
 
   reset: () => set({ routes: [], selectedIndex: 0, error: null }),
 }));

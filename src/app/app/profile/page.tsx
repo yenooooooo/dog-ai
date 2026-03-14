@@ -28,28 +28,22 @@ export default function ProfilePage() {
 
       let { data: mwUser } = await supabase
         .from('mw_users')
-        .select('nickname, neighborhood')
+        .select('id, nickname, neighborhood')
         .eq('auth_id', authUser.id)
         .single();
 
       if (!mwUser) {
         await supabase.from('mw_users').insert({ auth_id: authUser.id, nickname: authUser.email?.split('@')[0] ?? '견주' });
-        ({ data: mwUser } = await supabase.from('mw_users').select('nickname, neighborhood').eq('auth_id', authUser.id).single());
+        ({ data: mwUser } = await supabase.from('mw_users').select('id, nickname, neighborhood').eq('auth_id', authUser.id).single());
       }
 
-      if (mwUser) setUser(mwUser);
+      if (mwUser) {
+        setUser({ nickname: mwUser.nickname, neighborhood: mwUser.neighborhood });
 
-      const { data: mwUserFull } = await supabase
-        .from('mw_users')
-        .select('id')
-        .eq('auth_id', authUser.id)
-        .single();
-
-      if (mwUserFull) {
         const { data: petData } = await supabase
           .from('mw_pets')
           .select('id, name, breed, age_months, size')
-          .eq('user_id', mwUserFull.id);
+          .eq('user_id', mwUser.id);
 
         setPets(
           (petData ?? []).map((p) => ({

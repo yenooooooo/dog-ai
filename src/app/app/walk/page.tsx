@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Navigation } from 'lucide-react';
@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 import { useWalkTracker } from '@/hooks/useWalkTracker';
 import { useRouteStore } from '@/stores/routeStore';
 import type { WalkResult } from '@/stores/walkStore';
-import { createClient } from '@/lib/supabase/client';
 import { saveWalkToDb } from '@/lib/supabase/walk-save';
 import WalkStats from '@/components/walk/WalkStats';
 import WalkActionBar from '@/components/walk/WalkActionBar';
@@ -31,20 +30,11 @@ export default function WalkPage() {
   const [mapInstance, setMapInstance] = useState<kakao.maps.Map | null>(null);
   const [result, setResult] = useState<WalkResult | null>(null);
   const [showTags, setShowTags] = useState(false);
-  const [petName, setPetName] = useState<string | undefined>();
-  const [petId, setPetId] = useState<string | undefined>();
   const [following, setFollowing] = useState(true);
 
-  useEffect(() => {
-    const sb = createClient();
-    sb.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const { data: mu } = await sb.from('mw_users').select('id').eq('auth_id', user.id).single();
-      if (!mu) return;
-      const { data: pets } = await sb.from('mw_pets').select('id, name').eq('user_id', mu.id).limit(1);
-      if (pets?.[0]) { setPetName(pets[0].name); setPetId(pets[0].id); }
-    });
-  }, []);
+  const { routes, selectedIndex, selectedPetId, selectedPetName } = useRouteStore();
+  const petId = selectedPetId ?? undefined;
+  const petName = selectedPetName ?? undefined;
 
   const {
     position, gpsError, gpsLoading,
@@ -52,7 +42,6 @@ export default function WalkPage() {
     startWalk, pauseWalk, resumeWalk, endWalk, reset,
   } = useWalkTracker();
 
-  const { routes, selectedIndex } = useRouteStore();
   const referenceRoute = routes[selectedIndex] ?? null;
   const center = position ?? DEFAULT_CENTER;
 

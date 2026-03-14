@@ -8,7 +8,7 @@ import { useWalkStore } from '@/stores/walkStore';
 export function useWalkTracker() {
   const { position, error, isLoading } = useGeolocation();
   const {
-    isWalking, isPaused, startedAt, pausedDuration, targetDistance,
+    isWalking, isPaused, startedAt, targetDistance,
     coordinates, distance,
     startWalk, pauseWalk, resumeWalk, addCoordinate, endWalk, reset,
   } = useWalkStore();
@@ -19,12 +19,13 @@ export function useWalkTracker() {
   useEffect(() => {
     if (isWalking && startedAt) {
       timerRef.current = setInterval(() => {
-        const total = Date.now() - startedAt - pausedDuration;
-        setElapsed(Math.round(total / 1000));
+        const store = useWalkStore.getState();
+        const paused = store.pausedDuration + (store.pauseStartedAt ? Date.now() - store.pauseStartedAt : 0);
+        setElapsed(Math.round((Date.now() - startedAt - paused) / 1000));
       }, 1000);
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [isWalking, startedAt, pausedDuration]);
+  }, [isWalking, startedAt]);
 
   useEffect(() => {
     if (isWalking && !isPaused && position) addCoordinate(position);

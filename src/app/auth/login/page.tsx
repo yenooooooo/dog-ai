@@ -8,14 +8,10 @@ import { createClient } from '@/lib/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 async function ensureMwUser(supabase: SupabaseClient, authId: string, email: string) {
-  const { data } = await supabase
-    .from('mw_users').select('id').eq('auth_id', authId).single();
-  if (!data) {
-    await supabase.from('mw_users').insert({
-      auth_id: authId,
-      nickname: email.split('@')[0],
-    });
-  }
+  await supabase.from('mw_users').upsert(
+    { auth_id: authId, nickname: email.split('@')[0] },
+    { onConflict: 'auth_id' }
+  );
 }
 
 export default function LoginPage() {
