@@ -95,7 +95,7 @@ export default function AppMainPage() {
       {mapInstance && routes.length === 0 && <PastRoutes map={mapInstance} />}
 
       <TodayStatus />
-      {routes.length === 0 && <PetFriendlyButton map={mapInstance} position={position} />}
+      {routes.length === 0 && <PetFriendlyButton map={mapInstance} position={position} onSetOrigin={handleAddressSelect} />}
 
       {customOrigin && routes.length === 0 && (
         <div className="absolute left-5 top-3 z-30 flex items-center gap-2">

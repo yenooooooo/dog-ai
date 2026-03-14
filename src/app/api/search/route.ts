@@ -35,6 +35,7 @@ export async function GET(request: Request) {
   const query = searchParams.get('q');
   const lat = searchParams.get('lat');
   const lng = searchParams.get('lng');
+  const size = searchParams.get('size') ?? '5';
 
   if (!query) {
     return NextResponse.json({ error: '검색어가 필요해요.', code: 'NO_QUERY' }, { status: 400 });
@@ -49,7 +50,7 @@ export async function GET(request: Request) {
     // 원래 검색 (좌표 있으면 반경 2km 내 우선)
     const locParams = lat && lng ? `&x=${lng}&y=${lat}&radius=2000&sort=distance` : '';
     const res = await fetch(
-      `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&size=5${locParams}`,
+      `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&size=${size}${locParams}`,
       { headers: { Authorization: `KakaoAK ${apiKey}` } }
     );
     if (!res.ok) throw new Error(`Kakao ${res.status}`);
