@@ -8,13 +8,13 @@ import { toast } from 'sonner';
 
 import { useWalkTracker } from '@/hooks/useWalkTracker';
 import { useRouteStore } from '@/stores/routeStore';
-import { useWalkStore } from '@/stores/walkStore';
-import type { WalkResult } from '@/stores/walkStore';
+import { useWalkStore, type WalkResult } from '@/stores/walkStore';
 import { saveWalkToDb } from '@/lib/supabase/walk-save';
 import { clearWalkPhotos, getWalkPhotos } from '@/components/walk/PhotoCapture';
 import WalkStats from '@/components/walk/WalkStats';
 import WalkActionBar from '@/components/walk/WalkActionBar';
 import WalkCompleteModal from '@/components/walk/WalkCompleteModal';
+import ShortWalkPrompt from '@/components/walk/ShortWalkPrompt';
 import WalkTagManager from '@/components/walk/WalkTagManager';
 import NightWarning from '@/components/walk/NightWarning';
 import WalkStartPanel from '@/components/walk/WalkStartPanel';
@@ -77,6 +77,7 @@ export default function WalkPage() {
     setFollowing(false);
   };
 
+  const handleDiscard = () => { clearWalkPhotos(); setResult(null); reset(); router.push('/app'); };
   const handleConfirm = async () => {
     if (result) {
       try {
@@ -88,9 +89,9 @@ export default function WalkPage() {
         toast.success('산책 기록이 저장되었어요!');
       } catch { toast.error('기록 저장에 실패했어요.'); }
     }
-    clearWalkPhotos(); setResult(null); reset(); router.push('/app');
+    handleDiscard();
   };
-
+  const isShort = result ? (result.distance < 10 || result.durationSec < 30) : false;
   const photoCount = result ? getWalkPhotos().length : 0;
 
   return (
@@ -109,7 +110,6 @@ export default function WalkPage() {
 
       <WalkTagManager map={mapInstance} position={position} isOpen={showTags} onClose={() => setShowTags(false)} />
       <NightWarning />
-
       {!isWalking && (gpsLoading || gpsError) && (
         <div className="absolute left-5 top-3 z-30 rounded-mw bg-white/90 px-3 py-2 shadow-sm backdrop-blur">
           <p className={`text-[13px] ${gpsError ? 'text-mw-danger' : 'text-mw-gray-500'}`}>
@@ -117,7 +117,6 @@ export default function WalkPage() {
           </p>
         </div>
       )}
-
       {isWalking && <WalkStats elapsed={elapsed} distance={distance} targetDistance={targetDistance} petName={petName} />}
       {isWalking && (
         <WalkActionBar isPaused={isPaused} position={position} onTag={() => setShowTags(true)} onPause={pauseWalk} onResume={resumeWalk} onStop={() => setResult(endWalk())} />
@@ -135,12 +134,14 @@ export default function WalkPage() {
           </button>
         </div>
       )}
-
       {!isWalking && !result && (
         <WalkStartPanel route={referenceRoute} positionReady={!!position} onStartGuide={handleStartGuide} onStartFree={handleStartFree} />
       )}
 
-      {result && (
+      {result && isShort && (
+        <ShortWalkPrompt distance={result.distance} durationSec={result.durationSec} onSave={handleConfirm} onDiscard={handleDiscard} />
+      )}
+      {result && !isShort && (
         <WalkCompleteModal distance={result.distance} durationSec={result.durationSec} coordinates={result.coordinates} petName={petName} photoCount={photoCount} onConfirm={handleConfirm} />
       )}
     </div>

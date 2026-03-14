@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { Coordinate } from '@/types/route';
 import RoutePolyline from '@/components/map/RoutePolyline';
 import HistoryShareCard from '@/components/walk/HistoryShareCard';
+import WalkDetailActions from '@/components/walk/WalkDetailActions';
 
 const KakaoMap = dynamic(() => import('@/components/map/KakaoMap'), {
   ssr: false,
@@ -121,6 +122,8 @@ export default function WalkDetailPage() {
         {walk.coordinates.length >= 2 && (
           <HistoryShareCard coordinates={walk.coordinates} distance={walk.distanceMeters} durationSec={walk.durationSeconds} />
         )}
+
+        <WalkDetailActions walkId={id} />
       </div>
     </div>
   );
