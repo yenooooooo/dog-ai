@@ -130,7 +130,7 @@ export default function AppMainPage() {
           <span className="text-[13px] font-semibold text-white">산책 메뉴 열기</span>
         </button>
       ) : (
-        <BottomSheet isExpanded={sheetExpanded} onToggle={setSheetExpanded} collapsedHeight={routes.length > 0 ? 320 : pets.length > 0 ? 350 : 300}>
+        <BottomSheet isExpanded={sheetExpanded} onToggle={setSheetExpanded} collapsedHeight={routes.length > 0 ? 420 : pets.length > 0 ? 350 : 300}>
           <div className="flex items-center justify-between">
             <div className="flex-1" />
             <button onClick={() => setSheetHidden(true)} className="text-[11px] text-mw-gray-400">숨기기</button>
