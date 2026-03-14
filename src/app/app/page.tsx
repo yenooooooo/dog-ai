@@ -13,6 +13,7 @@ import BottomSheet from '@/components/layout/BottomSheet';
 import TimeSelector from '@/components/walk/TimeSelector';
 import RouteCard from '@/components/walk/RouteCard';
 import RoutePolyline from '@/components/map/RoutePolyline';
+import RouteDirectionMarkers from '@/components/map/RouteDirectionMarkers';
 import OriginMarker from '@/components/map/OriginMarker';
 import PetSelector from '@/components/walk/PetSelector';
 import TodayStatus from '@/components/walk/TodayStatus';
@@ -72,7 +73,10 @@ export default function AppMainPage() {
       <KakaoMap center={center} currentPosition={position} level={3} className="h-full w-full" onMapReady={setMapInstance} onMapClick={routes.length === 0 ? handleMapClick : undefined} />
 
       {mapInstance && selectedRoute && (
-        <RoutePolyline key={selectedRoute.id} map={mapInstance} path={selectedRoute.path} />
+        <>
+          <RoutePolyline key={selectedRoute.id} map={mapInstance} path={selectedRoute.path} />
+          <RouteDirectionMarkers key={`dir-${selectedRoute.id}`} map={mapInstance} path={selectedRoute.path} />
+        </>
       )}
       {mapInstance && customOrigin && <OriginMarker map={mapInstance} position={customOrigin} />}
 

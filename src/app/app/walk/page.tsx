@@ -17,6 +17,7 @@ import WalkCompleteModal from '@/components/walk/WalkCompleteModal';
 import WalkTagManager from '@/components/walk/WalkTagManager';
 import NightWarning from '@/components/walk/NightWarning';
 import RoutePolyline from '@/components/map/RoutePolyline';
+import RouteDirectionMarkers from '@/components/map/RouteDirectionMarkers';
 
 const KakaoMap = dynamic(() => import('@/components/map/KakaoMap'), {
   ssr: false,
@@ -90,7 +91,10 @@ export default function WalkPage() {
       <KakaoMap center={center} currentPosition={position} followPosition={isWalking && following && !isPaused} level={3} className="h-full w-full" onMapReady={setMapInstance} />
 
       {mapInstance && referenceRoute && (
-        <RoutePolyline map={mapInstance} path={referenceRoute.path} color="#2D8A42" opacity={0.25} weight={4} fitBounds={!isWalking} />
+        <>
+          <RoutePolyline map={mapInstance} path={referenceRoute.path} color="#2D8A42" opacity={0.25} weight={4} fitBounds={!isWalking} />
+          <RouteDirectionMarkers map={mapInstance} path={referenceRoute.path} />
+        </>
       )}
       {mapInstance && coordinates.length >= 2 && (
         <RoutePolyline map={mapInstance} path={coordinates} color="#2D8A42" opacity={0.9} weight={5} fitBounds={false} />
