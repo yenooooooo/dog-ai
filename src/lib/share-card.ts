@@ -11,11 +11,17 @@ export async function captureShareCard(
   });
 }
 
-export function downloadImage(dataUrl: string, filename: string): void {
+export async function downloadImage(dataUrl: string, filename: string): Promise<void> {
+  // iOS Safari는 data URL download 미지원 → Blob URL 사용
+  const blob = await (await fetch(dataUrl)).blob();
+  const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.download = filename;
-  link.href = dataUrl;
+  link.href = url;
+  document.body.appendChild(link);
   link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 /** Web Share API로 공유 시도, 불가하면 false 반환 */
