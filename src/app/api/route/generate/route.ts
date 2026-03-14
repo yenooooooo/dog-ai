@@ -12,7 +12,8 @@ const requestSchema = z.object({
   petSize: z.enum(['small', 'medium', 'large']).optional(),
 });
 
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 5;
+const MAX_DISTANCE_RATIO = 1.5; // 목표 대비 1.5배 초과 루트 제외
 
 export async function POST(request: Request) {
   try {
@@ -68,6 +69,17 @@ export async function POST(request: Request) {
         .map((r) => r.value);
 
       if (finalRoutes.length === 0) break;
+
+      // 목표 대비 1.5배 초과 루트 제외
+      finalRoutes = finalRoutes.filter(
+        (r) => r.totalDistance <= targetDistance * MAX_DISTANCE_RATIO
+      );
+
+      if (finalRoutes.length === 0) {
+        // 전부 초과 → 반경 절반으로 줄여서 재시도
+        currentRadius = (currentRadius ?? radius) * 0.5;
+        continue;
+      }
 
       // 첫 번째 루트 거리로 보정 판단
       const adjusted = adjustRadius(

@@ -33,7 +33,7 @@ async function snapOnePoint(
         query: keyword,
         x: String(coord.lng),
         y: String(coord.lat),
-        radius: '300',
+        radius: '150',
         sort: 'distance',
         size: '1',
       });
