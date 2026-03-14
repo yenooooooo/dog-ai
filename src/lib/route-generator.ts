@@ -17,7 +17,8 @@ const ROAD_DETOUR_FACTOR = 1.3;
 // 4개 웨이포인트 → 삼각형보다 부드러운 원형 경로
 const WP_COUNT = 4;
 const ROUTE_SPREAD = 40;
-const MIN_RADIUS = 300;
+// 최소 반경: 목표 거리에 따라 동적으로 결정 (아래 함수에서 계산)
+const ABS_MIN_RADIUS = 100;
 // 각 웨이포인트 반경 ±15% 변화 → 자연스러운 비대칭
 const RADIUS_JITTER = 0.15;
 
@@ -48,7 +49,9 @@ export function generateWaypoints(
   const speed = SPEED_BY_SIZE[petSize ?? ''] ?? DEFAULT_SPEED;
   const targetDistance = durationMinutes * speed;
   const calculated = (targetDistance / (2 * Math.PI)) * ROAD_DETOUR_FACTOR;
-  const radius = radiusOverride ?? Math.max(calculated, MIN_RADIUS);
+  // 최소 반경: 목표 거리의 1/20 또는 100m 중 큰 값
+  const minRadius = Math.max(targetDistance / 20, ABS_MIN_RADIUS);
+  const radius = radiusOverride ?? Math.max(calculated, minRadius);
 
   const baseRotation = Math.random() * 360;
   const rotations = [0, ROUTE_SPREAD, ROUTE_SPREAD * 2];
@@ -80,5 +83,5 @@ export function adjustRadius(
 ): number | null {
   const ratio = actualDistance / targetDistance;
   if (ratio >= 0.8 && ratio <= 1.2) return null;
-  return Math.max(currentRadius / ratio, MIN_RADIUS);
+  return Math.max(currentRadius / ratio, ABS_MIN_RADIUS);
 }
