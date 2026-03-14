@@ -15,7 +15,7 @@ export default function UpdateBanner() {
   useEffect(() => {
     const check = async () => {
       try {
-        const res = await fetch('/api/version');
+        const res = await fetch('/api/version', { cache: 'no-store' });
         const { version } = await res.json();
         if (!initialVersion.current) {
           initialVersion.current = version;
