@@ -9,23 +9,26 @@ interface KakaoMapProps {
   center: Coordinate;
   level?: number;
   currentPosition?: Coordinate | null;
+  /** true면 현위치 변경 시 지도 중심을 따라감 */
+  followPosition?: boolean;
   onMapReady?: (map: kakao.maps.Map) => void;
   className?: string;
 }
 
-// 현위치 파란 점 (DESIGN.md 브랜드 컬러)
+// 현위치 파란 점 — 경로(초록)와 구분되는 색상
 const POSITION_DOT_HTML = `<div style="
   width:18px;height:18px;
-  background:#2D8A42;
+  background:#4A90D9;
   border:3px solid white;
   border-radius:50%;
-  box-shadow:0 0 0 2px rgba(45,138,66,0.3),0 2px 4px rgba(0,0,0,0.2);
+  box-shadow:0 0 0 2px rgba(74,144,217,0.3),0 2px 4px rgba(0,0,0,0.2);
 "></div>`;
 
 export default function KakaoMap({
   center,
   level = 3,
   currentPosition,
+  followPosition = false,
   onMapReady,
   className = 'h-full w-full',
 }: KakaoMapProps) {
@@ -34,7 +37,6 @@ export default function KakaoMap({
   const hasPannedRef = useRef(false);
   const { map, isLoaded, error } = useKakaoMap(containerRef, { center, level });
 
-  // 현위치 마커 + 첫 GPS 수신 시 지도 이동
   useEffect(() => {
     if (!map || !isLoaded || !currentPosition) return;
 
@@ -43,19 +45,17 @@ export default function KakaoMap({
       currentPosition.lng
     );
 
-    // 첫 GPS 수신 → 지도 중심 이동 (1회)
-    if (!hasPannedRef.current) {
+    // 첫 GPS 수신 시 항상 이동, 이후엔 followPosition일 때만
+    if (!hasPannedRef.current || followPosition) {
       map.panTo(latlng);
       hasPannedRef.current = true;
     }
 
-    // 기존 오버레이가 있으면 위치만 업데이트
     if (overlayRef.current) {
       overlayRef.current.setPosition(latlng);
       return;
     }
 
-    // 새 오버레이 생성
     const overlay = new window.kakao.maps.CustomOverlay({
       content: POSITION_DOT_HTML,
       position: latlng,
@@ -64,14 +64,12 @@ export default function KakaoMap({
     });
     overlay.setMap(map);
     overlayRef.current = overlay;
-  }, [map, isLoaded, currentPosition]);
+  }, [map, isLoaded, currentPosition, followPosition]);
 
-  // 맵 인스턴스 콜백
   useEffect(() => {
     if (isLoaded && map) onMapReady?.(map);
   }, [isLoaded, map, onMapReady]);
 
-  // 마커 정리 (언마운트 시)
   useEffect(() => {
     return () => {
       if (overlayRef.current) {

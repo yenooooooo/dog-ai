@@ -9,7 +9,7 @@ interface WalkActionBarProps {
 
 export default function WalkActionBar({ onTag, onStop }: WalkActionBarProps) {
   return (
-    <div className="absolute bottom-24 left-4 right-4 z-30 flex gap-3">
+    <div className="absolute bottom-20 left-4 right-4 z-30 flex gap-3">
       <button
         onClick={onTag}
         className="flex flex-1 items-center justify-center gap-2 rounded-mw bg-white/90 py-3.5 shadow-sm backdrop-blur transition-transform active:scale-[0.97]"

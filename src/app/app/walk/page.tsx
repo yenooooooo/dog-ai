@@ -77,7 +77,7 @@ export default function WalkPage() {
 
   return (
     <div className="relative h-full overflow-hidden">
-      <KakaoMap center={center} currentPosition={position} level={3} className="h-full w-full" onMapReady={setMapInstance} />
+      <KakaoMap center={center} currentPosition={position} followPosition={isWalking} level={3} className="h-full w-full" onMapReady={setMapInstance} />
 
       {mapInstance && referenceRoute && (
         <RoutePolyline map={mapInstance} path={referenceRoute.path} color="#2D8A42" opacity={0.25} weight={4} fitBounds={!isWalking} />
@@ -100,7 +100,7 @@ export default function WalkPage() {
       {isWalking && <WalkActionBar onTag={() => setShowTags(true)} onStop={handleStop} />}
 
       {!isWalking && !result && (
-        <div className="absolute bottom-28 left-4 right-4 z-30">
+        <div className="absolute bottom-20 left-4 right-4 z-30">
           <button onClick={handleStart} disabled={!position} className="w-full animate-gentle-pulse rounded-mw bg-mw-green-500 py-4 text-[16px] font-bold text-white shadow-sm transition-transform active:scale-[0.97] disabled:opacity-40">
             산책 시작
           </button>
