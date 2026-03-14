@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { generateWaypoints, adjustRadius } from '@/lib/route-generator';
 import { fetchWalkingRoute } from '@/lib/kakao/route-api';
+import { snapWaypointsToRoad } from '@/lib/kakao/snap-to-road';
 import type { GeneratedRoute, RouteSegment } from '@/types/route';
 
 const requestSchema = z.object({
@@ -17,8 +18,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { origin, durationMinutes, petSize } = requestSchema.parse(body);
-    // 도보 속도 (m/분) — 카카오 API는 차량 시간을 반환하므로 직접 계산
     const walkSpeed = petSize === 'small' ? 50 : petSize === 'large' ? 83 : 67;
+    const kakaoKey = process.env.KAKAO_REST_API_KEY ?? '';
 
     let currentRadius: number | undefined;
     let finalRoutes: GeneratedRoute[] = [];
@@ -32,10 +33,17 @@ export async function POST(request: Request) {
         petSize
       );
 
-      // 3개 루트를 병렬로 Kakao API 호출
+      // 웨이포인트를 공공 도로 위 장소로 보정 → 아파트 내부 경로 방지
+      const snappedRoutes = await Promise.all(
+        routes.map(async (r) => ({
+          ...r,
+          waypoints: kakaoKey ? await snapWaypointsToRoad(r.waypoints, kakaoKey) : r.waypoints,
+        }))
+      );
+
       const results = await Promise.allSettled(
-        routes.map(async (r, idx) => {
-          const { path, distance, duration } = await fetchWalkingRoute(
+        snappedRoutes.map(async (r, idx) => {
+          const { path, distance } = await fetchWalkingRoute(
             origin,
             r.waypoints
           );
