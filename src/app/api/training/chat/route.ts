@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     }
 
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -68,8 +68,9 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error('AI 상담 실패:', err);
     const status = err instanceof z.ZodError ? 400 : 500;
+    const msg = err instanceof Error ? err.message : 'AI 답변을 가져오지 못했어요.';
     return NextResponse.json(
-      { error: 'AI 답변을 가져오지 못했어요.', code: 'AI_ERROR' },
+      { error: msg, code: 'AI_ERROR' },
       { status }
     );
   }

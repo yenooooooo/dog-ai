@@ -40,10 +40,11 @@ export default function TrainingChat({ petInfo }: TrainingChatProps) {
         body: JSON.stringify({ message: text, petInfo }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) throw new Error(data.error ?? '서버 오류');
       setMessages((prev) => [...prev, { role: 'ai', text: data.answer }]);
-    } catch {
-      toast.error('답변을 가져오지 못했어요.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '답변을 가져오지 못했어요.';
+      toast.error(msg);
     } finally {
       setLoading(false);
       setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }), 100);
