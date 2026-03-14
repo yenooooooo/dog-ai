@@ -32,6 +32,7 @@ export default function AppMainPage() {
   const [duration, setDuration] = useState(30);
   const [mapInstance, setMapInstance] = useState<kakao.maps.Map | null>(null);
   const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [sheetHidden, setSheetHidden] = useState(false);
   const [customOrigin, setCustomOrigin] = useState<Coordinate | null>(null);
   const [pets, setPets] = useState<PetInfo[]>([]);
   const [selectedPet, setSelectedPet] = useState<PetInfo | null>(null);
@@ -121,15 +122,25 @@ export default function AppMainPage() {
         </div>
       )}
 
-      <BottomSheet isExpanded={sheetExpanded} onToggle={setSheetExpanded} collapsedHeight={routes.length > 0 ? 320 : pets.length > 0 ? 350 : 300}>
-        <MainBottomContent
-          duration={duration} onDurationChange={setDuration}
-          pets={pets} selectedPet={selectedPet} onSelectPet={setSelectedPet}
-          isGenerating={isGenerating} canGenerate={!!origin} routeError={routeError}
-          onGenerate={handleGenerate} onReset={handleReset}
-          hasCustomOrigin={!!customOrigin} onFavoriteSelect={handleFavoriteSelect} onAddressSelect={handleAddressSelect}
-        />
-      </BottomSheet>
+      {sheetHidden ? (
+        <button onClick={() => setSheetHidden(false)} className="absolute bottom-20 left-1/2 z-40 -translate-x-1/2 rounded-full bg-mw-green-500 px-5 py-2.5 shadow-lg active:scale-[0.97]">
+          <span className="text-[13px] font-semibold text-white">산책 메뉴 열기</span>
+        </button>
+      ) : (
+        <BottomSheet isExpanded={sheetExpanded} onToggle={setSheetExpanded} collapsedHeight={routes.length > 0 ? 320 : pets.length > 0 ? 350 : 300}>
+          <div className="flex items-center justify-between">
+            <div className="flex-1" />
+            <button onClick={() => setSheetHidden(true)} className="text-[11px] text-mw-gray-400">숨기기</button>
+          </div>
+          <MainBottomContent
+            duration={duration} onDurationChange={setDuration}
+            pets={pets} selectedPet={selectedPet} onSelectPet={setSelectedPet}
+            isGenerating={isGenerating} canGenerate={!!origin} routeError={routeError}
+            onGenerate={handleGenerate} onReset={handleReset}
+            hasCustomOrigin={!!customOrigin} onFavoriteSelect={handleFavoriteSelect} onAddressSelect={handleAddressSelect}
+          />
+        </BottomSheet>
+      )}
     </div>
   );
 }
