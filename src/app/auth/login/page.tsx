@@ -5,6 +5,18 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 
 import { createClient } from '@/lib/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+async function ensureMwUser(supabase: SupabaseClient, authId: string, email: string) {
+  const { data } = await supabase
+    .from('mw_users').select('id').eq('auth_id', authId).single();
+  if (!data) {
+    await supabase.from('mw_users').insert({
+      auth_id: authId,
+      nickname: email.split('@')[0],
+    });
+  }
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -21,19 +33,27 @@ export default function LoginPage() {
       const supabase = createClient();
 
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
         });
         if (error) throw error;
-        toast.success('가입 완료! 이메일을 확인해주세요.');
+        // 회원가입 성공 → mw_users 자동 생성
+        if (signUpData.user) {
+          await ensureMwUser(supabase, signUpData.user.id, email);
+        }
+        toast.success('가입 완료!');
+        window.location.href = '/app';
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data: signInData, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
+        // 로그인 성공 → mw_users 없으면 생성
+        if (signInData.user) {
+          await ensureMwUser(supabase, signInData.user.id, email);
+        }
         window.location.href = '/app';
       }
     } catch (err) {

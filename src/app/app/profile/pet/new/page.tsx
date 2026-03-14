@@ -13,11 +13,11 @@ export default function NewPetPage() {
   const handleSave = async (data: { name: string; breed: string; ageMonths: number | null; size: string | null }) => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) { toast.error('로그인이 필요해요.'); return; }
 
     const { data: mwUser } = await supabase
       .from('mw_users').select('id').eq('auth_id', user.id).single();
-    if (!mwUser) return;
+    if (!mwUser) { toast.error('프로필을 먼저 설정해주세요.'); return; }
 
     const { error } = await supabase.from('mw_pets').insert({
       user_id: mwUser.id,
