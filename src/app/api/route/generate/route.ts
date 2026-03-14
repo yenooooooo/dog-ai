@@ -84,11 +84,11 @@ export async function POST(request: Request) {
         origin, durationMinutes, currentRadius, petSize
       );
 
-      // 구글: 스냅 불필요 (이미 도보 경로), 카카오: 스냅 적용
-      finalRoutes = await tryBuildRoutes(origin, routes, walkSpeed, kakaoKey, !useGoogle);
+      // 1차: 스냅 적용 (공공장소로 웨이포인트 보정)
+      finalRoutes = await tryBuildRoutes(origin, routes, walkSpeed, kakaoKey, true);
 
-      // 카카오 스냅 실패 시 원래 좌표로 폴백
-      if (finalRoutes.length === 0 && !useGoogle) {
+      // 2차: 스냅 실패 시 원래 좌표로 폴백
+      if (finalRoutes.length === 0) {
         finalRoutes = await tryBuildRoutes(origin, routes, walkSpeed, kakaoKey, false);
       }
 
