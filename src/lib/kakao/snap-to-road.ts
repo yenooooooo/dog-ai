@@ -6,7 +6,7 @@
 import type { Coordinate } from '@/types/route';
 
 // 공공 장소 검색 키워드 (우선순위 순)
-const SEARCH_KEYWORDS = ['교차로', '편의점', '공원', '버스정류장', '학교'];
+const SEARCH_KEYWORDS = ['산책로', '공원', '보행자도로', '교차로', '편의점', '버스정류장'];
 
 interface KakaoPlace {
   x: string;

@@ -90,7 +90,9 @@ export default function RouteCard({ route, isSelected, onSelect, onStartWalk }: 
         ))}
       </div>
 
-      <div className="mt-3 flex items-center gap-4 text-[13px] text-mw-gray-500">
+      <p className="mt-2 text-[10px] text-mw-gray-300">⚠️ 차도 포함 가능 — 반드시 인도로 걸어주세요</p>
+
+      <div className="mt-2 flex items-center gap-4 text-[13px] text-mw-gray-500">
         <span className="flex items-center gap-1"><Route size={14} strokeWidth={1.75} />{formatDistance(route.totalDistance)}</span>
         <span className="flex items-center gap-1"><Timer size={14} strokeWidth={1.75} />약 {route.estimatedDuration}분</span>
       </div>
