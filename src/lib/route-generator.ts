@@ -1,28 +1,26 @@
 /**
  * 순환 산책 루트 생성 알고리즘
  *
- * 1) 목표 거리 = 시간(분) × 67m/분 (시속 4km)
+ * 1) 목표 거리 = 시간(분) × 속도(크기별)
  * 2) 반경 = 거리 / (2π) × 1.3 (최소 300m)
- * 3) 원점 중심 120° 간격 삼각형 웨이포인트
- * 4) 루트별 랜덤 방향 + 40° 간격
+ * 3) 4개 웨이포인트 (90° 간격, 부드러운 원형)
+ * 4) 각 웨이포인트 반경 ±15% 랜덤 변화 → 자연스러운 경로
  */
 import type { Coordinate } from '@/types/route';
 import { getPointAtBearing } from './geo-utils';
 
-// 크기별 도보 속도 (m/분)
 const SPEED_BY_SIZE: Record<string, number> = {
-  small: 50,   // 시속 3km
-  medium: 67,  // 시속 4km
-  large: 83,   // 시속 5km
+  small: 50, medium: 67, large: 83,
 };
 const DEFAULT_SPEED = 67;
 const ROAD_DETOUR_FACTOR = 1.3;
-const WP_COUNT = 3;
+// 4개 웨이포인트 → 삼각형보다 부드러운 원형 경로
+const WP_COUNT = 4;
 const ROUTE_SPREAD = 40;
-// 최소 반경 300m — 아파트 단지 밖으로 나가도록
 const MIN_RADIUS = 300;
+// 각 웨이포인트 반경 ±15% 변화 → 자연스러운 비대칭
+const RADIUS_JITTER = 0.15;
 
-/** 방위각(도) → 방향 이름 */
 function bearingToDirection(deg: number): string {
   const d = ((deg % 360) + 360) % 360;
   if (d < 22.5 || d >= 337.5) return '북쪽';
@@ -49,12 +47,9 @@ export function generateWaypoints(
 ): { routes: WaypointSet[]; radius: number; targetDistance: number } {
   const speed = SPEED_BY_SIZE[petSize ?? ''] ?? DEFAULT_SPEED;
   const targetDistance = durationMinutes * speed;
-
-  // 반경: 최소 MIN_RADIUS 보장
   const calculated = (targetDistance / (2 * Math.PI)) * ROAD_DETOUR_FACTOR;
   const radius = radiusOverride ?? Math.max(calculated, MIN_RADIUS);
 
-  // 랜덤 기준 방향
   const baseRotation = Math.random() * 360;
   const rotations = [0, ROUTE_SPREAD, ROUTE_SPREAD * 2];
 
@@ -63,9 +58,10 @@ export function generateWaypoints(
     const waypoints: Coordinate[] = [];
     for (let i = 0; i < WP_COUNT; i++) {
       const bearing = (360 / WP_COUNT) * i + mainBearing;
-      waypoints.push(getPointAtBearing(origin, bearing, radius));
+      // 각 웨이포인트마다 반경을 ±15% 랜덤 변화 → 자연스러운 경로
+      const jitter = 1 + (Math.random() * 2 - 1) * RADIUS_JITTER;
+      waypoints.push(getPointAtBearing(origin, bearing, radius * jitter));
     }
-
     const direction = bearingToDirection(mainBearing);
     return {
       name: `${direction} 코스`,

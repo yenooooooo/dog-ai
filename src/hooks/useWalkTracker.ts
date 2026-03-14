@@ -8,58 +8,38 @@ import { useWalkStore } from '@/stores/walkStore';
 export function useWalkTracker() {
   const { position, error, isLoading } = useGeolocation();
   const {
-    isWalking,
-    startedAt,
-    coordinates,
-    distance,
-    startWalk,
-    addCoordinate,
-    endWalk,
-    reset,
+    isWalking, isPaused, startedAt, pausedDuration, targetDistance,
+    coordinates, distance,
+    startWalk, pauseWalk, resumeWalk, addCoordinate, endWalk, reset,
   } = useWalkStore();
 
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // 1초 간격 경과 시간 타이머
   useEffect(() => {
     if (isWalking && startedAt) {
       timerRef.current = setInterval(() => {
-        setElapsed(Math.round((Date.now() - startedAt) / 1000));
+        const total = Date.now() - startedAt - pausedDuration;
+        setElapsed(Math.round(total / 1000));
       }, 1000);
     }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isWalking, startedAt]);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [isWalking, startedAt, pausedDuration]);
 
-  // GPS 좌표 → 스토어에 추가
   useEffect(() => {
-    if (isWalking && position) {
-      addCoordinate(position);
-    }
-  }, [isWalking, position, addCoordinate]);
+    if (isWalking && !isPaused && position) addCoordinate(position);
+  }, [isWalking, isPaused, position, addCoordinate]);
 
   const handleEnd = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     return endWalk();
   };
 
-  const handleReset = () => {
-    setElapsed(0);
-    reset();
-  };
-
   return {
-    position,
-    gpsError: error,
-    gpsLoading: isLoading,
-    isWalking,
-    coordinates,
-    distance,
-    elapsed,
-    startWalk,
+    position, gpsError: error, gpsLoading: isLoading,
+    isWalking, isPaused, coordinates, distance, elapsed, targetDistance,
+    startWalk, pauseWalk, resumeWalk,
     endWalk: handleEnd,
-    reset: handleReset,
+    reset: () => { setElapsed(0); reset(); },
   };
 }

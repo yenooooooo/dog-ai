@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { Navigation } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useWalkTracker } from '@/hooks/useWalkTracker';
@@ -31,6 +32,7 @@ export default function WalkPage() {
   const [showTags, setShowTags] = useState(false);
   const [petName, setPetName] = useState<string | undefined>();
   const [petId, setPetId] = useState<string | undefined>();
+  const [following, setFollowing] = useState(true);
 
   useEffect(() => {
     const sb = createClient();
@@ -45,8 +47,8 @@ export default function WalkPage() {
 
   const {
     position, gpsError, gpsLoading,
-    isWalking, coordinates, distance, elapsed,
-    startWalk, endWalk, reset,
+    isWalking, isPaused, coordinates, distance, elapsed, targetDistance,
+    startWalk, pauseWalk, resumeWalk, endWalk, reset,
   } = useWalkTracker();
 
   const { routes, selectedIndex } = useRouteStore();
@@ -55,10 +57,18 @@ export default function WalkPage() {
 
   const handleStart = () => {
     if (!position) { toast.error('현재 위치를 확인할 수 없어요.'); return; }
-    startWalk();
+    const target = referenceRoute?.totalDistance;
+    startWalk(target);
   };
 
   const handleStop = () => setResult(endWalk());
+
+  const handleRecenter = () => {
+    if (mapInstance && position) {
+      mapInstance.panTo(new window.kakao.maps.LatLng(position.lat, position.lng));
+      setFollowing(true);
+    }
+  };
 
   const handleConfirm = async () => {
     if (result) {
@@ -67,20 +77,17 @@ export default function WalkPage() {
           startedAt: new Date(result.startedAt).toISOString(),
           distanceMeters: Math.round(result.distance),
           durationSeconds: result.durationSec,
-          coordinates: result.coordinates,
-          petId,
+          coordinates: result.coordinates, petId,
         });
         toast.success('산책 기록이 저장되었어요!');
       } catch { toast.error('기록 저장에 실패했어요.'); }
     }
-    setResult(null);
-    reset();
-    router.push('/app');
+    setResult(null); reset(); router.push('/app');
   };
 
   return (
     <div className="relative h-full overflow-hidden">
-      <KakaoMap center={center} currentPosition={position} followPosition={isWalking} level={3} className="h-full w-full" onMapReady={setMapInstance} />
+      <KakaoMap center={center} currentPosition={position} followPosition={isWalking && following && !isPaused} level={3} className="h-full w-full" onMapReady={setMapInstance} />
 
       {mapInstance && referenceRoute && (
         <RoutePolyline map={mapInstance} path={referenceRoute.path} color="#2D8A42" opacity={0.25} weight={4} fitBounds={!isWalking} />
@@ -100,12 +107,21 @@ export default function WalkPage() {
         </div>
       )}
 
-      {isWalking && <WalkStats elapsed={elapsed} distance={distance} />}
-      {isWalking && <WalkActionBar onTag={() => setShowTags(true)} onStop={handleStop} />}
+      {isWalking && <WalkStats elapsed={elapsed} distance={distance} targetDistance={targetDistance} />}
+      {isWalking && (
+        <WalkActionBar isPaused={isPaused} onTag={() => setShowTags(true)} onPause={pauseWalk} onResume={resumeWalk} onStop={handleStop} />
+      )}
+
+      {/* 현위치 복귀 버튼 */}
+      {isWalking && !following && (
+        <button onClick={handleRecenter} className="absolute bottom-36 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-md active:scale-[0.95]">
+          <Navigation size={20} className="text-mw-info" />
+        </button>
+      )}
 
       {!isWalking && !result && (
         <div className="absolute bottom-20 left-4 right-4 z-30">
-          <button onClick={handleStart} disabled={!position} className="w-full animate-gentle-pulse rounded-mw bg-mw-green-500 py-4 text-[16px] font-bold text-white shadow-sm transition-transform active:scale-[0.97] disabled:opacity-40">
+          <button onClick={handleStart} disabled={!position} className="w-full animate-gentle-pulse rounded-mw bg-mw-green-500 py-4 text-[16px] font-bold text-white shadow-sm active:scale-[0.97] disabled:opacity-40">
             산책 시작
           </button>
         </div>
