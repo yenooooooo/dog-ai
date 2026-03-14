@@ -71,7 +71,9 @@ export default function AppMainPage() {
     <div className="relative h-full overflow-hidden">
       <KakaoMap center={center} currentPosition={position} level={3} className="h-full w-full" onMapReady={setMapInstance} onMapClick={routes.length === 0 ? handleMapClick : undefined} />
 
-      {mapInstance && selectedRoute && <RoutePolyline map={mapInstance} path={selectedRoute.path} />}
+      {mapInstance && selectedRoute && (
+        <RoutePolyline key={selectedRoute.id} map={mapInstance} path={selectedRoute.path} />
+      )}
       {mapInstance && customOrigin && <OriginMarker map={mapInstance} position={customOrigin} />}
 
       <TodayStatus />
