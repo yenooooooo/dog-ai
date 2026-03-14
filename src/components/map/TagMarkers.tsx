@@ -37,7 +37,7 @@ export default function TagMarkers({ map, tags, onTagClick }: TagMarkersProps) {
       ">${meta.emoji}</div>`;
 
       if (onTagClick) {
-        el.addEventListener('click', () => onTagClick(tag));
+        el.addEventListener('click', (e) => { e.stopPropagation(); onTagClick(tag); });
       }
 
       const overlay = new window.kakao.maps.CustomOverlay({
