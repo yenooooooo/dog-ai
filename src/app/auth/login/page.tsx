@@ -13,14 +13,16 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
           scopes: 'profile_nickname profile_image',
+          skipBrowserRedirect: true,
         },
       });
       if (error) throw error;
+      if (data?.url) window.location.href = data.url;
     } catch {
       toast.error('로그인에 실패했어요. 다시 시도해주세요.');
       setLoading(false);
