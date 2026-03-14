@@ -65,7 +65,7 @@ export async function fetchGoogleWalkingRoute(
 
   const data: GoogleResponse = await res.json();
   if (data.status !== 'OK' || data.routes.length === 0) {
-    const errMsg = (data as Record<string, unknown>).error_message ?? data.status;
+    const errMsg = (data as unknown as Record<string, unknown>).error_message ?? data.status;
     throw new Error(`Google: ${errMsg}`);
   }
 
