@@ -2,9 +2,19 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { generateWaypoints, adjustRadius } from '@/lib/route-generator';
-import { fetchWalkingRoute } from '@/lib/kakao/route-api';
+import { fetchWalkingRoute as fetchKakaoRoute } from '@/lib/kakao/route-api';
+import { fetchGoogleWalkingRoute } from '@/lib/google/walking-route';
 import { snapWaypointsToRoad } from '@/lib/kakao/snap-to-road';
 import type { GeneratedRoute, RouteSegment } from '@/types/route';
+import type { Coordinate } from '@/types/route';
+
+// 구글 API 키 있으면 구글 도보, 없으면 카카오 차량
+const useGoogle = !!process.env.GOOGLE_MAPS_API_KEY;
+
+async function fetchRoute(origin: Coordinate, waypoints: Coordinate[]) {
+  if (useGoogle) return fetchGoogleWalkingRoute(origin, waypoints);
+  return fetchKakaoRoute(origin, waypoints);
+}
 
 const requestSchema = z.object({
   origin: z.object({ lat: z.number(), lng: z.number() }),
@@ -31,13 +41,13 @@ async function tryBuildRoutes(
 
   const results = await Promise.allSettled(
     snapped.map(async (r, idx) => {
-      const { path, distance } = await fetchWalkingRoute(origin, r.waypoints);
+      const { path, distance, duration } = await fetchRoute(origin, r.waypoints);
       return {
         id: `route-${idx}-${Date.now()}`,
         name: r.name, tags: r.tags,
         segments: [] as RouteSegment[],
         totalDistance: distance,
-        estimatedDuration: Math.round(distance / walkSpeed),
+        estimatedDuration: useGoogle ? Math.round(duration / 60) : Math.round(distance / walkSpeed),
         waypoints: r.waypoints.map((wp, i) => ({ ...wp, order: i })),
         path,
       } satisfies GeneratedRoute;
@@ -64,11 +74,11 @@ export async function POST(request: Request) {
         origin, durationMinutes, currentRadius, petSize
       );
 
-      // 1차: 스냅 적용
-      finalRoutes = await tryBuildRoutes(origin, routes, walkSpeed, kakaoKey, true);
+      // 구글: 스냅 불필요 (이미 도보 경로), 카카오: 스냅 적용
+      finalRoutes = await tryBuildRoutes(origin, routes, walkSpeed, kakaoKey, !useGoogle);
 
-      // 2차: 스냅 실패 시 원래 좌표로 폴백
-      if (finalRoutes.length === 0) {
+      // 카카오 스냅 실패 시 원래 좌표로 폴백
+      if (finalRoutes.length === 0 && !useGoogle) {
         finalRoutes = await tryBuildRoutes(origin, routes, walkSpeed, kakaoKey, false);
       }
 
