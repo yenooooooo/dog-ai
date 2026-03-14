@@ -1,14 +1,47 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
+
+import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
-  const handleLogin = () => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const redirectTo = encodeURIComponent(
-      `${window.location.origin}/auth/callback`
-    );
-    window.location.href = `${supabaseUrl}/auth/v1/authorize?provider=kakao&redirect_to=${redirectTo}&scopes=profile_nickname%20profile_image`;
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    setLoading(true);
+
+    try {
+      const supabase = createClient();
+
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        });
+        if (error) throw error;
+        toast.success('가입 완료! 이메일을 확인해주세요.');
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+        window.location.href = '/app';
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '오류가 발생했어요.';
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -20,20 +53,36 @@ export default function LoginPage() {
         매일 새로운 산책 루트를 만들어 드려요
       </p>
 
-      <div className="mt-10 w-full max-w-sm">
+      <form onSubmit={handleSubmit} className="mt-10 w-full max-w-sm">
+        <input
+          type="email"
+          placeholder="이메일"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full rounded-mw border border-mw-gray-200 px-4 py-3.5 text-[15px] text-mw-gray-800 placeholder:text-mw-gray-400 focus:border-mw-green-500 focus:outline-none"
+        />
+        <input
+          type="password"
+          placeholder="비밀번호 (6자 이상)"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="mt-2 w-full rounded-mw border border-mw-gray-200 px-4 py-3.5 text-[15px] text-mw-gray-800 placeholder:text-mw-gray-400 focus:border-mw-green-500 focus:outline-none"
+        />
         <button
-          onClick={handleLogin}
-          className="flex w-full items-center justify-center gap-2 rounded-mw bg-[#FEE500] py-4 text-[15px] font-semibold text-[#191919] transition-transform active:scale-[0.97]"
+          type="submit"
+          disabled={loading || !email || !password}
+          className="mt-3 w-full rounded-mw bg-mw-green-500 py-4 text-[15px] font-semibold text-white transition-transform active:scale-[0.97] disabled:opacity-50"
         >
-          <svg width="18" height="18" viewBox="0 0 18 18">
-            <path
-              d="M9 1C4.58 1 1 3.8 1 7.24c0 2.22 1.48 4.17 3.7 5.27l-.94 3.48c-.08.3.26.54.52.36l4.16-2.74c.18.01.37.02.56.02 4.42 0 8-2.8 8-6.24S13.42 1 9 1z"
-              fill="#191919"
-            />
-          </svg>
-          카카오로 시작하기
+          {loading ? '처리 중...' : isSignUp ? '회원가입' : '로그인'}
         </button>
-      </div>
+      </form>
+
+      <button
+        onClick={() => setIsSignUp(!isSignUp)}
+        className="mt-4 text-[13px] text-mw-gray-500"
+      >
+        {isSignUp ? '이미 계정이 있어요 →' : '계정이 없어요 → 회원가입'}
+      </button>
 
       <p className="mt-8 text-center text-[12px] text-mw-gray-400">
         로그인하면 이용약관 및 개인정보처리방침에
