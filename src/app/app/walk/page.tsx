@@ -17,6 +17,7 @@ import WalkActionBar from '@/components/walk/WalkActionBar';
 import WalkCompleteModal from '@/components/walk/WalkCompleteModal';
 import WalkTagManager from '@/components/walk/WalkTagManager';
 import NightWarning from '@/components/walk/NightWarning';
+import WalkStartPanel from '@/components/walk/WalkStartPanel';
 import RoutePolyline from '@/components/map/RoutePolyline';
 import RouteDirectionMarkers from '@/components/map/RouteDirectionMarkers';
 
@@ -47,9 +48,16 @@ export default function WalkPage() {
   const referenceRoute = routes[selectedIndex] ?? null;
   const center = position ?? { lat: 37.5665, lng: 126.978 };
 
-  const handleStart = () => {
+  /** 가이드 산책 — 루트의 총 거리를 목표로 */
+  const handleStartGuide = () => {
     if (!position) { toast.error('현재 위치를 확인할 수 없어요.'); return; }
     startWalk(referenceRoute?.totalDistance);
+  };
+
+  /** 자유 산책 — 목표 거리 없음 (진행률 바 미표시) */
+  const handleStartFree = () => {
+    if (!position) { toast.error('현재 위치를 확인할 수 없어요.'); return; }
+    startWalk(0);
   };
 
   const handleRecenter = () => {
@@ -129,11 +137,7 @@ export default function WalkPage() {
       )}
 
       {!isWalking && !result && (
-        <div className="absolute bottom-20 left-4 right-4 z-30">
-          <button onClick={handleStart} disabled={!position} className="w-full animate-gentle-pulse rounded-mw bg-mw-green-500 py-4 text-[16px] font-bold text-white shadow-sm active:scale-[0.97] disabled:opacity-40">
-            산책 시작
-          </button>
-        </div>
+        <WalkStartPanel route={referenceRoute} positionReady={!!position} onStartGuide={handleStartGuide} onStartFree={handleStartFree} />
       )}
 
       {result && (
