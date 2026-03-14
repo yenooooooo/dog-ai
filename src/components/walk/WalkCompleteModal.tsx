@@ -31,25 +31,16 @@ export default function WalkCompleteModal({
   const svg = useMemo(() => pathToSvg(coordinates, 280, 120), [coordinates]);
   const message = useMemo(() => getWalkCompleteMessage(petName, km), [petName, km]);
 
-  const handleDownload = async () => {
+  const handleSave = async () => {
     if (!cardRef.current || saving) return;
     setSaving(true);
     try {
       const url = await captureShareCard(cardRef.current);
-      await downloadImage(url, `mungwalk-${Date.now()}.png`);
-      toast.success('이미지가 저장되었어요!');
-    } catch { toast.error('저장에 실패했어요.'); }
-    finally { setSaving(false); }
-  };
-
-  const handleShare = async () => {
-    if (!cardRef.current || saving) return;
-    setSaving(true);
-    try {
-      const url = await captureShareCard(cardRef.current);
+      // iOS는 download가 안 먹으므로 Web Share → "이미지 저장" 유도
       const shared = await shareImage(url);
-      if (!shared) { await downloadImage(url, `mungwalk-${Date.now()}.png`); }
-    } catch { toast.error('공유에 실패했어요.'); }
+      if (shared) { toast.success('이미지를 저장/공유했어요!'); }
+      else { await downloadImage(url, `mungwalk-${Date.now()}.png`); toast.success('이미지가 저장되었어요!'); }
+    } catch { toast.error('저장에 실패했어요.'); }
     finally { setSaving(false); }
   };
 
@@ -86,14 +77,9 @@ export default function WalkCompleteModal({
           <Stat icon={<Camera size={14} className="text-mw-info" />} label="사진" value={`${photoCount}장`} />
         </div>
 
-        <div className="mt-5 flex gap-2">
-          <button onClick={handleDownload} disabled={saving} className="flex flex-1 items-center justify-center gap-1.5 rounded-mw bg-mw-gray-100 py-3 text-[13px] font-semibold text-mw-gray-700 active:scale-[0.97] disabled:opacity-50">
-            <Download size={14} /> 저장
-          </button>
-          <button onClick={handleShare} disabled={saving} className="flex flex-1 items-center justify-center gap-1.5 rounded-mw bg-mw-green-50 py-3 text-[13px] font-semibold text-mw-green-600 active:scale-[0.97] disabled:opacity-50">
-            <Share2 size={14} /> 공유
-          </button>
-        </div>
+        <button onClick={handleSave} disabled={saving} className="mt-5 flex w-full items-center justify-center gap-2 rounded-mw bg-mw-green-50 py-3 text-[14px] font-semibold text-mw-green-600 active:scale-[0.97] disabled:opacity-50">
+          <Download size={16} /> 산책 카드 저장 / 공유
+        </button>
 
         <button onClick={onConfirm} className="mt-2 w-full rounded-mw bg-mw-green-500 py-3.5 text-[15px] font-semibold text-white active:scale-[0.97]">
           완료
