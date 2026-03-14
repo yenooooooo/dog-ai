@@ -1,6 +1,7 @@
 import BottomNav from '@/components/layout/BottomNav';
 import IosPwaPrompt from '@/components/layout/IosPwaPrompt';
 import OnboardingModal from '@/components/layout/OnboardingModal';
+import UpdateBanner from '@/components/layout/UpdateBanner';
 
 export default function AppLayout({
   children,
@@ -13,6 +14,7 @@ export default function AppLayout({
       <BottomNav />
       <IosPwaPrompt />
       <OnboardingModal />
+      <UpdateBanner />
     </div>
   );
 }
