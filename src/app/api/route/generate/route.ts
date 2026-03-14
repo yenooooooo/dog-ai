@@ -54,10 +54,20 @@ async function tryBuildRoutes(
     })
   );
 
-  return results
+  const fulfilled = results
     .filter((r): r is PromiseFulfilledResult<GeneratedRoute> => r.status === 'fulfilled')
     .map((r) => r.value);
+
+  // 전부 실패 시 첫 번째 에러를 lastError에 저장
+  if (fulfilled.length === 0) {
+    const firstErr = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+    if (firstErr) lastError = String(firstErr.reason);
+  }
+
+  return fulfilled;
 }
+
+let lastError = '';
 
 export async function POST(request: Request) {
   try {
@@ -100,8 +110,9 @@ export async function POST(request: Request) {
     }
 
     if (finalRoutes.length === 0) {
+      const detail = lastError ? ` (${lastError})` : '';
       return NextResponse.json(
-        { error: '이 위치에서 도보 경로를 찾을 수 없어요. 도로 근처로 위치를 옮겨보세요.', code: 'NO_ROUTE' },
+        { error: `도보 경로를 찾을 수 없어요.${detail}`, code: 'NO_ROUTE' },
         { status: 422 }
       );
     }
