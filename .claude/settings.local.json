@@ -24,7 +24,8 @@
       "Bash(wc -l src/app/app/profile/page.tsx src/app/app/profile/pet/new/page.tsx src/app/app/profile/pet/\\\\[id\\\\]/edit/page.tsx src/app/app/walk/page.tsx src/app/app/history/page.tsx src/app/app/history/\\\\[id\\\\]/page.tsx src/app/api/route/generate/route.ts src/app/layout.tsx src/hooks/useMwUser.ts)",
       "Bash(wc -l src/app/app/profile/page.tsx src/app/app/profile/pet/new/page.tsx src/app/app/profile/pet/\\\\[id\\\\]/edit/page.tsx src/app/app/walk/page.tsx src/app/app/history/page.tsx src/app/app/history/\\\\[id\\\\]/page.tsx src/app/api/route/generate/route.ts src/app/layout.tsx src/hooks/useMwUser.ts src/lib/supabase/walk-save.ts)",
       "Bash(wc -l src/lib/reading/*.ts src/components/reading/ArticleViewer.tsx src/app/app/profile/reading/page.tsx src/app/app/profile/page.tsx)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(curl:*)"
     ]
   }
 }

@@ -8,8 +8,9 @@ import { snapWaypointsToRoad } from '@/lib/kakao/snap-to-road';
 import type { GeneratedRoute, RouteSegment } from '@/types/route';
 import type { Coordinate } from '@/types/route';
 
-// 구글 API 키 있으면 구글 도보, 없으면 카카오 차량
-const useGoogle = !!process.env.GOOGLE_MAPS_API_KEY;
+// 한국에서는 구글 도보 API 미지원 → 카카오 사용
+// 해외 서비스 확장 시 구글 전환 가능
+const useGoogle = false;
 
 async function fetchRoute(origin: Coordinate, waypoints: Coordinate[]) {
   if (useGoogle) return fetchGoogleWalkingRoute(origin, waypoints);
