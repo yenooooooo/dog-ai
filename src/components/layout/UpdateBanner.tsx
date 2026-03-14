@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { RefreshCw } from 'lucide-react';
+
+import { useWalkStore } from '@/stores/walkStore';
 
 const CHECK_INTERVAL = 60_000; // 1분마다 체크
 
@@ -32,6 +34,21 @@ export default function UpdateBanner() {
     return () => clearInterval(id);
   }, []);
 
+  const handleUpdate = useCallback(() => {
+    // 산책 중이면 즉시 백업 후 새로고침 (데이터 손실 0초)
+    const store = useWalkStore.getState();
+    if (store.isWalking && store.startedAt) {
+      try {
+        localStorage.setItem('mw_walk_backup', JSON.stringify({
+          isWalking: true, startedAt: store.startedAt,
+          coordinates: store.coordinates, distance: store.distance,
+          pausedDuration: store.pausedDuration, targetDistance: store.targetDistance,
+        }));
+      } catch { /* 실패해도 새로고침 진행 */ }
+    }
+    window.location.reload();
+  }, []);
+
   if (!hasUpdate) return null;
 
   return (
@@ -41,7 +58,7 @@ export default function UpdateBanner() {
           새 버전이 있어요!
         </span>
         <button
-          onClick={() => window.location.reload()}
+          onClick={handleUpdate}
           className="flex items-center gap-1.5 rounded-mw-sm bg-white/20 px-3 py-1.5 text-[13px] font-semibold text-white active:scale-[0.97]"
         >
           <RefreshCw size={14} />
