@@ -101,7 +101,7 @@ export default function AppMainPage() {
             <MapPin size={14} className="text-mw-danger" />
             <span className="text-[13px] font-medium text-mw-gray-800">출발 위치 지정됨</span>
           </div>
-          <button onClick={() => { setCustomOrigin(null); toast.success('현재 위치로 돌아왔어요'); }} className="flex items-center gap-1 rounded-mw bg-white/90 px-3 py-2 shadow-sm backdrop-blur">
+          <button onClick={() => { setCustomOrigin(null); if (mapInstance && position) mapInstance.panTo(new window.kakao.maps.LatLng(position.lat, position.lng)); toast.success('현재 위치로 돌아왔어요'); }} className="flex items-center gap-1 rounded-mw bg-white/90 px-3 py-2 shadow-sm backdrop-blur">
             <Navigation size={14} className="text-mw-info" />
             <span className="text-[13px] text-mw-gray-600">현위치</span>
           </button>
