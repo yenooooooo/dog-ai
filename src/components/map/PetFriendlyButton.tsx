@@ -28,6 +28,7 @@ export default function PetFriendlyButton({ map, position, onSetOrigin }: PetFri
   const [overlays, setOverlays] = useState<kakao.maps.CustomOverlay[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<PetPlaceInfo | null>(null);
+  const [minimized, setMinimized] = useState(false);
 
   const clearOverlays = useCallback(() => {
     overlays.forEach((o) => o.setMap(null));
@@ -82,6 +83,18 @@ export default function PetFriendlyButton({ map, position, onSetOrigin }: PetFri
     );
   }
 
+  if (minimized) {
+    return (
+      <>
+        <button onClick={() => setMinimized(false)} className="absolute left-4 right-4 top-12 z-30 flex items-center justify-between rounded-mw bg-white/95 px-4 py-2.5 shadow-lg backdrop-blur">
+          <span className="text-[12px] font-semibold text-mw-green-600">🐾 {places.length}곳 검색됨</span>
+          <span className="text-[11px] text-mw-gray-400">목록 보기</span>
+        </button>
+        {selected && <PetPlacePopup place={selected} onSetOrigin={onSetOrigin} onClose={() => { setSelected(null); setMinimized(false); }} />}
+      </>
+    );
+  }
+
   return (
     <>
       <div className="absolute left-4 right-4 top-12 z-30 max-h-[50vh] overflow-y-auto rounded-mw-lg bg-white/95 p-3 shadow-lg backdrop-blur">
@@ -102,7 +115,7 @@ export default function PetFriendlyButton({ map, position, onSetOrigin }: PetFri
           <div className="mt-2 flex flex-col gap-1">
             <p className="text-[11px] text-mw-gray-400">{places.length}곳 발견</p>
             {places.map((p, i) => (
-              <button key={i} onClick={() => { setSelected(p); map?.panTo(new window.kakao.maps.LatLng(p.lat, p.lng)); }} className="flex items-center gap-2 rounded-mw-sm px-2 py-2 text-left active:bg-mw-gray-50">
+              <button key={i} onClick={() => { setSelected(p); setMinimized(true); map?.panTo(new window.kakao.maps.LatLng(p.lat, p.lng)); }} className="flex items-center gap-2 rounded-mw-sm px-2 py-2 text-left active:bg-mw-gray-50">
                 <MapPin size={13} className="shrink-0 text-mw-green-500" />
                 <div className="flex-1 truncate">
                   <p className="truncate text-[12px] font-medium text-mw-gray-900">{p.name}</p>
@@ -115,7 +128,7 @@ export default function PetFriendlyButton({ map, position, onSetOrigin }: PetFri
       </div>
 
       {selected && (
-        <PetPlacePopup place={selected} onSetOrigin={onSetOrigin} onClose={() => setSelected(null)} />
+        <PetPlacePopup place={selected} onSetOrigin={onSetOrigin} onClose={() => { setSelected(null); setMinimized(false); }} />
       )}
     </>
   );
