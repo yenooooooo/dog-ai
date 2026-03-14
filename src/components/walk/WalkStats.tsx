@@ -6,6 +6,7 @@ interface WalkStatsProps {
   elapsed: number;
   distance: number;
   targetDistance?: number;
+  petName?: string;
 }
 
 function formatTime(sec: number): string {
@@ -23,12 +24,20 @@ function estimateCalories(meters: number): number {
   return Math.round((meters / 1000) * 65 * 0.5);
 }
 
-export default function WalkStats({ elapsed, distance, targetDistance }: WalkStatsProps) {
+export default function WalkStats({ elapsed, distance, targetDistance, petName }: WalkStatsProps) {
   const progress = targetDistance && targetDistance > 0
     ? Math.min(Math.round((distance / targetDistance) * 100), 100) : null;
 
   return (
     <div className="absolute left-4 right-4 top-3 z-30">
+      {petName && (
+        <div className="mb-1.5 flex justify-center">
+          <span className="inline-flex items-center gap-1 rounded-full bg-mw-green-500/90 px-3 py-1 text-[12px] font-medium text-white shadow-sm backdrop-blur">
+            <span className="text-[14px]" role="img" aria-label="dog">&#128021;</span>
+            {petName}와 산책 중
+          </span>
+        </div>
+      )}
       <div className="flex gap-2">
         <div className="flex flex-1 items-center gap-2 rounded-mw bg-white/90 px-3 py-2.5 shadow-sm backdrop-blur">
           <Timer size={16} className="text-mw-green-500" strokeWidth={2} />

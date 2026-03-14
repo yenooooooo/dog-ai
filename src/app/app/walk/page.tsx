@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Navigation } from 'lucide-react';
+import { Navigation, Maximize2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useWalkTracker } from '@/hooks/useWalkTracker';
 import { useRouteStore } from '@/stores/routeStore';
+import { useWalkStore } from '@/stores/walkStore';
 import type { WalkResult } from '@/stores/walkStore';
 import { saveWalkToDb } from '@/lib/supabase/walk-save';
 import { clearWalkPhotos, getWalkPhotos } from '@/components/walk/PhotoCapture';
@@ -20,11 +21,8 @@ import RoutePolyline from '@/components/map/RoutePolyline';
 import RouteDirectionMarkers from '@/components/map/RouteDirectionMarkers';
 
 const KakaoMap = dynamic(() => import('@/components/map/KakaoMap'), {
-  ssr: false,
-  loading: () => <div className="h-full w-full bg-mw-gray-100 animate-pulse" />,
+  ssr: false, loading: () => <div className="h-full w-full bg-mw-gray-100 animate-pulse" />,
 });
-
-const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
 
 export default function WalkPage() {
   const router = useRouter();
@@ -36,29 +34,39 @@ export default function WalkPage() {
   const { routes, selectedIndex, selectedPetId, selectedPetName } = useRouteStore();
   const petId = selectedPetId ?? undefined;
   const petName = selectedPetName ?? undefined;
-
   const {
     position, gpsError, gpsLoading,
     isWalking, isPaused, coordinates, distance, elapsed, targetDistance,
     startWalk, pauseWalk, resumeWalk, endWalk, reset,
   } = useWalkTracker();
 
+  useEffect(() => {
+    if (useWalkStore.getState().restoreWalk()) toast.info('이전 산책을 이어서 진행합니다.');
+  }, []);
+
   const referenceRoute = routes[selectedIndex] ?? null;
-  const center = position ?? DEFAULT_CENTER;
+  const center = position ?? { lat: 37.5665, lng: 126.978 };
 
   const handleStart = () => {
     if (!position) { toast.error('현재 위치를 확인할 수 없어요.'); return; }
-    const target = referenceRoute?.totalDistance;
-    startWalk(target);
+    startWalk(referenceRoute?.totalDistance);
   };
 
-  const handleStop = () => setResult(endWalk());
-
   const handleRecenter = () => {
-    if (mapInstance && position) {
-      mapInstance.panTo(new window.kakao.maps.LatLng(position.lat, position.lng));
-      setFollowing(true);
+    if (!mapInstance || !position) return;
+    mapInstance.panTo(new window.kakao.maps.LatLng(position.lat, position.lng));
+    setFollowing(true);
+  };
+
+  const handleShowFullRoute = () => {
+    if (!mapInstance || coordinates.length < 2) return;
+    const bounds = new window.kakao.maps.LatLngBounds();
+    coordinates.forEach((c) => bounds.extend(new window.kakao.maps.LatLng(c.lat, c.lng)));
+    if (referenceRoute) {
+      referenceRoute.path.forEach((c) => bounds.extend(new window.kakao.maps.LatLng(c.lat, c.lng)));
     }
+    mapInstance.setBounds(bounds);
+    setFollowing(false);
   };
 
   const handleConfirm = async () => {
@@ -67,14 +75,12 @@ export default function WalkPage() {
         await saveWalkToDb({
           startedAt: new Date(result.startedAt).toISOString(),
           distanceMeters: Math.round(result.distance),
-          durationSeconds: result.durationSec,
-          coordinates: result.coordinates, petId,
+          durationSeconds: result.durationSec, coordinates: result.coordinates, petId,
         });
         toast.success('산책 기록이 저장되었어요!');
       } catch { toast.error('기록 저장에 실패했어요.'); }
     }
-    clearWalkPhotos();
-    setResult(null); reset(); router.push('/app');
+    clearWalkPhotos(); setResult(null); reset(); router.push('/app');
   };
 
   const photoCount = result ? getWalkPhotos().length : 0;
@@ -104,16 +110,22 @@ export default function WalkPage() {
         </div>
       )}
 
-      {isWalking && <WalkStats elapsed={elapsed} distance={distance} targetDistance={targetDistance} />}
+      {isWalking && <WalkStats elapsed={elapsed} distance={distance} targetDistance={targetDistance} petName={petName} />}
       {isWalking && (
-        <WalkActionBar isPaused={isPaused} position={position} onTag={() => setShowTags(true)} onPause={pauseWalk} onResume={resumeWalk} onStop={handleStop} />
+        <WalkActionBar isPaused={isPaused} position={position} onTag={() => setShowTags(true)} onPause={pauseWalk} onResume={resumeWalk} onStop={() => setResult(endWalk())} />
       )}
 
-      {/* 현위치 복귀 버튼 */}
-      {isWalking && !following && (
-        <button onClick={handleRecenter} className="absolute bottom-36 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-md active:scale-[0.95]">
-          <Navigation size={20} className="text-mw-info" />
-        </button>
+      {isWalking && (
+        <div className="absolute bottom-36 right-4 z-30 flex flex-col gap-2">
+          {!following && (
+            <button onClick={handleRecenter} className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-md active:scale-[0.95]" aria-label="현위치 복귀">
+              <Navigation size={20} className="text-mw-info" />
+            </button>
+          )}
+          <button onClick={handleShowFullRoute} className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-md active:scale-[0.95]" aria-label="전체 보기">
+            <Maximize2 size={20} className="text-mw-gray-600" />
+          </button>
+        </div>
       )}
 
       {!isWalking && !result && (
