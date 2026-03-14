@@ -60,8 +60,14 @@ export default function PetFriendlyButton({ map, position }: PetFriendlyButtonPr
       });
       setOverlays(newOverlays);
 
-      if (items.length === 0) toast.info('주변에 결과가 없어요.');
-      else toast.success(`${items.length}곳을 찾았어요!`);
+      // 결과가 보이도록 지도 범위 조정
+      if (items.length > 0) {
+        const bounds = new window.kakao.maps.LatLngBounds();
+        items.forEach((p) => bounds.extend(new window.kakao.maps.LatLng(p.lat, p.lng)));
+        if (position) bounds.extend(new window.kakao.maps.LatLng(position.lat, position.lng));
+        map.setBounds(bounds);
+        toast.success(`${items.length}곳을 찾았어요!`);
+      } else { toast.info('주변에 결과가 없어요.'); }
     } catch { toast.error('검색에 실패했어요.'); }
     finally { setLoading(false); }
   };
