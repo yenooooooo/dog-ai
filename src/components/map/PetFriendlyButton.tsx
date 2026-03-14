@@ -40,7 +40,7 @@ export default function PetFriendlyButton({ map, position }: PetFriendlyButtonPr
     setLoading(true);
     clearOverlays();
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&lat=${position.lat}&lng=${position.lng}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 

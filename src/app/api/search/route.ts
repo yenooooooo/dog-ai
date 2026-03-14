@@ -33,6 +33,8 @@ function checkPetFriendly(
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('q');
+  const lat = searchParams.get('lat');
+  const lng = searchParams.get('lng');
 
   if (!query) {
     return NextResponse.json({ error: '검색어가 필요해요.', code: 'NO_QUERY' }, { status: 400 });
@@ -44,9 +46,10 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 원래 검색
+    // 원래 검색 (좌표 있으면 반경 2km 내 우선)
+    const locParams = lat && lng ? `&x=${lng}&y=${lat}&radius=2000&sort=distance` : '';
     const res = await fetch(
-      `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&size=5`,
+      `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&size=5${locParams}`,
       { headers: { Authorization: `KakaoAK ${apiKey}` } }
     );
     if (!res.ok) throw new Error(`Kakao ${res.status}`);
@@ -54,7 +57,7 @@ export async function GET(request: Request) {
 
     // 반려견 동반 2차 검색 (동반 가능 매장 교차 확인)
     const petRes = await fetch(
-      `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(`애견동반 ${query}`)}&size=10`,
+      `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(`애견동반 ${query}`)}&size=10${locParams}`,
       { headers: { Authorization: `KakaoAK ${apiKey}` } }
     );
     const petData = petRes.ok ? await petRes.json() : { documents: [] };
