@@ -46,9 +46,15 @@ export default function RoutePolyline({
     polylineRef.current = polyline;
 
     // 루트가 보이도록 지도 범위 조정
+    // 하단 바텀시트(~40% 화면)를 고려하여 남쪽으로 범위 확장
     if (fitBounds) {
       const bounds = new window.kakao.maps.LatLngBounds();
       linePath.forEach((ll) => bounds.extend(ll));
+      // 바텀시트 영역 보정: 남쪽 경계를 위도 차이의 60% 더 내림
+      const sw = bounds.getSouthWest();
+      const ne = bounds.getNorthEast();
+      const latPad = (ne.getLat() - sw.getLat()) * 0.6;
+      bounds.extend(new window.kakao.maps.LatLng(sw.getLat() - latPad, sw.getLng()));
       map.setBounds(bounds);
     }
 
