@@ -7,7 +7,8 @@ import TimeSelector from '@/components/walk/TimeSelector';
 import RouteCard from '@/components/walk/RouteCard';
 import PetSelector from '@/components/walk/PetSelector';
 import FavoriteRoutes from '@/components/walk/FavoriteRoutes';
-import type { GeneratedRoute } from '@/types/route';
+import AddressSearch from '@/components/walk/AddressSearch';
+import type { Coordinate, GeneratedRoute } from '@/types/route';
 
 interface PetInfo { id: string; name: string; size: string | null }
 
@@ -24,12 +25,13 @@ interface MainBottomContentProps {
   onReset: () => void;
   hasCustomOrigin: boolean;
   onFavoriteSelect: (route: GeneratedRoute) => void;
+  onAddressSelect: (coord: Coordinate, name: string) => void;
 }
 
 export default function MainBottomContent({
   duration, onDurationChange, pets, selectedPet, onSelectPet,
   isGenerating, canGenerate, routeError, onGenerate, onReset,
-  hasCustomOrigin, onFavoriteSelect,
+  hasCustomOrigin, onFavoriteSelect, onAddressSelect,
 }: MainBottomContentProps) {
   const router = useRouter();
   const { routes, selectedIndex, selectRoute } = useRouteStore();
@@ -58,6 +60,7 @@ export default function MainBottomContent({
       <p className="mt-1 text-[13px] text-mw-gray-500">
         {hasCustomOrigin ? '출발 위치를 지정했어요' : '지도를 탭하면 출발 위치를 변경할 수 있어요'}
       </p>
+      <AddressSearch onSelect={onAddressSelect} />
       <PetSelector pets={pets} selectedId={selectedPet?.id ?? null} onSelect={onSelectPet} />
       <div className="mt-3"><TimeSelector value={duration} onChange={onDurationChange} /></div>
       <button onClick={onGenerate} disabled={isGenerating || !canGenerate} className="mt-3 w-full rounded-mw bg-mw-green-500 py-3.5 text-[15px] font-semibold text-white transition-transform active:scale-[0.97] disabled:opacity-40">

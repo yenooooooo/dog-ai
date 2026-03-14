@@ -66,6 +66,12 @@ export default function AppMainPage() {
 
   const handleReset = () => { reset(); setCustomOrigin(null); };
 
+  const handleAddressSelect = useCallback((coord: Coordinate, name: string) => {
+    setCustomOrigin(coord);
+    if (mapInstance) mapInstance.panTo(new window.kakao.maps.LatLng(coord.lat, coord.lng));
+    toast.success(`${name}(으)로 출발 위치 설정`);
+  }, [mapInstance]);
+
   const handleFavoriteSelect = useCallback((route: GeneratedRoute) => {
     if (mapInstance && route.path.length >= 2) {
       const bounds = new window.kakao.maps.LatLngBounds();
@@ -119,7 +125,7 @@ export default function AppMainPage() {
           pets={pets} selectedPet={selectedPet} onSelectPet={setSelectedPet}
           isGenerating={isGenerating} canGenerate={!!origin} routeError={routeError}
           onGenerate={handleGenerate} onReset={handleReset}
-          hasCustomOrigin={!!customOrigin} onFavoriteSelect={handleFavoriteSelect}
+          hasCustomOrigin={!!customOrigin} onFavoriteSelect={handleFavoriteSelect} onAddressSelect={handleAddressSelect}
         />
       </BottomSheet>
     </div>
