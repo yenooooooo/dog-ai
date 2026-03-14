@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Timer, Route, Zap, Flame, Camera, Share2 } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { Timer, Route, Zap, Flame, Camera, Download, Share2 } from 'lucide-react';
+import { toast } from 'sonner';
 
-import ShareCardPreview from '@/components/walk/ShareCardPreview';
+import ShareCard from '@/components/walk/ShareCard';
+import { captureShareCard, downloadImage, shareImage } from '@/lib/share-card';
 import { pathToSvg } from '@/lib/path-to-svg';
 import { getWalkCompleteMessage } from '@/lib/walk-messages';
 import type { Coordinate } from '@/types/route';
@@ -20,7 +22,8 @@ interface WalkCompleteModalProps {
 export default function WalkCompleteModal({
   distance, durationSec, coordinates, petName, photoCount = 0, onConfirm,
 }: WalkCompleteModalProps) {
-  const [showShare, setShowShare] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [saving, setSaving] = useState(false);
   const km = (distance / 1000).toFixed(2);
   const mins = Math.round(durationSec / 60);
   const avgSpeed = durationSec > 0 ? ((distance / durationSec) * 60).toFixed(0) : '0';
@@ -28,16 +31,36 @@ export default function WalkCompleteModal({
   const svg = useMemo(() => pathToSvg(coordinates, 280, 120), [coordinates]);
   const message = useMemo(() => getWalkCompleteMessage(petName, km), [petName, km]);
 
-  if (showShare) {
-    return (
-      <ShareCardPreview coordinates={coordinates} distance={distance} durationSec={durationSec} petName={petName} onBack={() => setShowShare(false)} onConfirm={onConfirm} />
-    );
-  }
+  const handleDownload = async () => {
+    if (!cardRef.current || saving) return;
+    setSaving(true);
+    try {
+      const url = await captureShareCard(cardRef.current);
+      await downloadImage(url, `mungwalk-${Date.now()}.png`);
+      toast.success('이미지가 저장되었어요!');
+    } catch { toast.error('저장에 실패했어요.'); }
+    finally { setSaving(false); }
+  };
+
+  const handleShare = async () => {
+    if (!cardRef.current || saving) return;
+    setSaving(true);
+    try {
+      const url = await captureShareCard(cardRef.current);
+      const shared = await shareImage(url);
+      if (!shared) { await downloadImage(url, `mungwalk-${Date.now()}.png`); }
+    } catch { toast.error('공유에 실패했어요.'); }
+    finally { setSaving(false); }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      {/* 숨겨진 ShareCard (캡처용) */}
+      <div className="fixed left-[-9999px]">
+        <ShareCard ref={cardRef} coordinates={coordinates} distance={distance} durationSec={durationSec} petName={petName} />
+      </div>
+
       <div className="mx-6 w-full max-w-sm animate-slide-up rounded-mw-xl bg-gradient-to-b from-mw-green-50 to-white px-6 pb-8 pt-6">
-        {/* 경로 미니맵 */}
         <div className="flex h-[120px] items-center justify-center rounded-mw-lg bg-white/80">
           {svg ? (
             <svg width="280" height="120" viewBox="0 0 280 120">
@@ -49,16 +72,13 @@ export default function WalkCompleteModal({
           )}
         </div>
 
-        {/* 축하 메시지 */}
         <p className="mt-4 text-center text-[15px] font-bold text-mw-gray-900">{message}</p>
 
-        {/* 핵심 숫자 (큰 숫자) */}
         <div className="mt-4 flex items-end justify-center gap-1">
           <span className="text-[40px] font-extrabold leading-none text-mw-green-500">{km}</span>
           <span className="pb-1 text-[16px] font-semibold text-mw-green-400">km</span>
         </div>
 
-        {/* 상세 통계 */}
         <div className="mt-4 grid grid-cols-4 gap-2">
           <Stat icon={<Timer size={14} className="text-mw-green-500" />} label="시간" value={`${mins}분`} />
           <Stat icon={<Zap size={14} className="text-mw-amber-500" />} label="속도" value={`${avgSpeed}m/분`} />
@@ -66,16 +86,18 @@ export default function WalkCompleteModal({
           <Stat icon={<Camera size={14} className="text-mw-info" />} label="사진" value={`${photoCount}장`} />
         </div>
 
-        {/* 버튼 */}
         <div className="mt-5 flex gap-2">
-          <button onClick={() => setShowShare(true)} className="flex flex-1 items-center justify-center gap-2 rounded-mw bg-mw-green-50 py-3.5 text-[14px] font-semibold text-mw-green-600 active:scale-[0.97]">
-            <Share2 size={16} />
-            공유 카드
+          <button onClick={handleDownload} disabled={saving} className="flex flex-1 items-center justify-center gap-1.5 rounded-mw bg-mw-gray-100 py-3 text-[13px] font-semibold text-mw-gray-700 active:scale-[0.97] disabled:opacity-50">
+            <Download size={14} /> 저장
           </button>
-          <button onClick={onConfirm} className="flex flex-1 items-center justify-center rounded-mw bg-mw-green-500 py-3.5 text-[15px] font-semibold text-white active:scale-[0.97]">
-            완료
+          <button onClick={handleShare} disabled={saving} className="flex flex-1 items-center justify-center gap-1.5 rounded-mw bg-mw-green-50 py-3 text-[13px] font-semibold text-mw-green-600 active:scale-[0.97] disabled:opacity-50">
+            <Share2 size={14} /> 공유
           </button>
         </div>
+
+        <button onClick={onConfirm} className="mt-2 w-full rounded-mw bg-mw-green-500 py-3.5 text-[15px] font-semibold text-white active:scale-[0.97]">
+          완료
+        </button>
       </div>
     </div>
   );
