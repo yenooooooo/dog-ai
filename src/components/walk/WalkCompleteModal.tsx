@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Timer, Route, Zap } from 'lucide-react';
+import { Timer, Route, Zap, Camera } from 'lucide-react';
 
 import ShareCardPreview from '@/components/walk/ShareCardPreview';
 import type { Coordinate } from '@/types/route';
@@ -11,6 +11,7 @@ interface WalkCompleteModalProps {
   durationSec: number;
   coordinates: Coordinate[];
   petName?: string;
+  photoCount?: number;
   onConfirm: () => void;
 }
 
@@ -25,6 +26,7 @@ export default function WalkCompleteModal({
   durationSec,
   coordinates,
   petName,
+  photoCount = 0,
   onConfirm,
 }: WalkCompleteModalProps) {
   const [showShare, setShowShare] = useState(false);
@@ -72,6 +74,13 @@ export default function WalkCompleteModal({
             value={`${avgSpeed}m/분`}
           />
         </div>
+
+        {photoCount > 0 && (
+          <div className="mt-3 flex items-center justify-center gap-1.5 text-[13px] text-mw-gray-500">
+            <Camera size={14} />
+            <span>사진 {photoCount}장</span>
+          </div>
+        )}
 
         <button
           onClick={() => setShowShare(true)}

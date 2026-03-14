@@ -3,15 +3,19 @@
 import { useState } from 'react';
 import { Tag, Square, Pause, Play } from 'lucide-react';
 
+import PhotoCapture from '@/components/walk/PhotoCapture';
+import type { Coordinate } from '@/types/route';
+
 interface WalkActionBarProps {
   isPaused: boolean;
+  position: Coordinate | null;
   onTag: () => void;
   onPause: () => void;
   onResume: () => void;
   onStop: () => void;
 }
 
-export default function WalkActionBar({ isPaused, onTag, onPause, onResume, onStop }: WalkActionBarProps) {
+export default function WalkActionBar({ isPaused, position, onTag, onPause, onResume, onStop }: WalkActionBarProps) {
   const [confirming, setConfirming] = useState(false);
 
   if (confirming) {
@@ -39,6 +43,7 @@ export default function WalkActionBar({ isPaused, onTag, onPause, onResume, onSt
         <Tag size={16} className="text-mw-green-500" strokeWidth={2} />
         <span className="text-[13px] font-semibold text-mw-gray-800">태그</span>
       </button>
+      <PhotoCapture position={position} />
       <button onClick={isPaused ? onResume : onPause} className="flex items-center justify-center gap-2 rounded-mw bg-white/90 px-5 py-3.5 shadow-sm backdrop-blur active:scale-[0.97]">
         {isPaused ? <Play size={16} className="text-mw-green-500" /> : <Pause size={16} className="text-mw-amber-500" />}
         <span className="text-[13px] font-semibold text-mw-gray-800">{isPaused ? '재개' : '일시정지'}</span>

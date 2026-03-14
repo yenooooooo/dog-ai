@@ -10,6 +10,7 @@ import { useWalkTracker } from '@/hooks/useWalkTracker';
 import { useRouteStore } from '@/stores/routeStore';
 import type { WalkResult } from '@/stores/walkStore';
 import { saveWalkToDb } from '@/lib/supabase/walk-save';
+import { clearWalkPhotos, getWalkPhotos } from '@/components/walk/PhotoCapture';
 import WalkStats from '@/components/walk/WalkStats';
 import WalkActionBar from '@/components/walk/WalkActionBar';
 import WalkCompleteModal from '@/components/walk/WalkCompleteModal';
@@ -72,8 +73,11 @@ export default function WalkPage() {
         toast.success('산책 기록이 저장되었어요!');
       } catch { toast.error('기록 저장에 실패했어요.'); }
     }
+    clearWalkPhotos();
     setResult(null); reset(); router.push('/app');
   };
+
+  const photoCount = result ? getWalkPhotos().length : 0;
 
   return (
     <div className="relative h-full overflow-hidden">
@@ -102,7 +106,7 @@ export default function WalkPage() {
 
       {isWalking && <WalkStats elapsed={elapsed} distance={distance} targetDistance={targetDistance} />}
       {isWalking && (
-        <WalkActionBar isPaused={isPaused} onTag={() => setShowTags(true)} onPause={pauseWalk} onResume={resumeWalk} onStop={handleStop} />
+        <WalkActionBar isPaused={isPaused} position={position} onTag={() => setShowTags(true)} onPause={pauseWalk} onResume={resumeWalk} onStop={handleStop} />
       )}
 
       {/* 현위치 복귀 버튼 */}
@@ -121,7 +125,7 @@ export default function WalkPage() {
       )}
 
       {result && (
-        <WalkCompleteModal distance={result.distance} durationSec={result.durationSec} coordinates={result.coordinates} petName={petName} onConfirm={handleConfirm} />
+        <WalkCompleteModal distance={result.distance} durationSec={result.durationSec} coordinates={result.coordinates} petName={petName} photoCount={photoCount} onConfirm={handleConfirm} />
       )}
     </div>
   );

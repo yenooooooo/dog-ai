@@ -1,8 +1,11 @@
 'use client';
 
-import { Route, Timer } from 'lucide-react';
+import { useState } from 'react';
+import { Route, Timer, Heart } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { cn } from '@/lib/utils';
+import { saveFavoriteRoute, isFavoriteRoute } from '@/lib/supabase/favorite-routes';
 import type { GeneratedRoute, Coordinate } from '@/types/route';
 
 interface RouteCardProps {
@@ -51,7 +54,15 @@ function pathToSvg(path: Coordinate[], w: number, h: number): string | null {
 }
 
 export default function RouteCard({ route, isSelected, onSelect, onStartWalk }: RouteCardProps) {
+  const [isFav, setIsFav] = useState(() => isFavoriteRoute(route.id));
   const svgPath = pathToSvg(route.path, 280, 120);
+
+  const handleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    saveFavoriteRoute(route);
+    setIsFav(true);
+    toast.success('즐겨찾기에 저장했어요!');
+  };
 
   return (
     <div
@@ -85,12 +96,20 @@ export default function RouteCard({ route, isSelected, onSelect, onStartWalk }: 
       </div>
 
       {isSelected && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onStartWalk(); }}
-          className="mt-4 w-full rounded-mw bg-mw-green-500 py-3 text-[15px] font-semibold text-white transition-transform active:scale-[0.97]"
-        >
-          이 루트로 산책
-        </button>
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); onStartWalk(); }}
+            className="flex-1 rounded-mw bg-mw-green-500 py-3 text-[15px] font-semibold text-white transition-transform active:scale-[0.97]"
+          >
+            이 루트로 산책
+          </button>
+          <button
+            onClick={handleFavorite} disabled={isFav}
+            className="flex h-[46px] w-[46px] items-center justify-center rounded-mw border border-mw-gray-200 transition-transform active:scale-[0.95] disabled:opacity-50"
+          >
+            <Heart size={18} className={isFav ? 'text-mw-danger' : 'text-mw-gray-400'} fill={isFav ? 'currentColor' : 'none'} />
+          </button>
+        </div>
       )}
     </div>
   );

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 
 import { createClient } from '@/lib/supabase/client';
+import { getWeeklyGoal, setWeeklyGoal, getWeeklyProgress } from '@/lib/weekly-goal';
+import WeeklyGoalCard from '@/components/walk/WeeklyGoalCard';
 import MonthSummaryCard from '@/components/walk/MonthSummaryCard';
 import WalkHistoryCard from '@/components/walk/WalkHistoryCard';
 
@@ -31,6 +33,7 @@ function formatDateLabel(isoDate: string): string {
 export default function HistoryPage() {
   const [walks, setWalks] = useState<WalkRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [goalKm, setGoalKm] = useState(10);
 
   useEffect(() => {
     const load = async () => {
@@ -58,6 +61,7 @@ export default function HistoryPage() {
           durationSeconds: w.duration_seconds,
         }))
       );
+      setGoalKm(getWeeklyGoal());
       setLoading(false);
     };
     load();
@@ -70,7 +74,13 @@ export default function HistoryPage() {
   });
   const totalDistance = thisMonth.reduce((s, w) => s + w.distanceMeters, 0);
   const totalDuration = thisMonth.reduce((s, w) => s + w.durationSeconds, 0);
+  const weeklyProgress = getWeeklyProgress(walks);
   const grouped = groupByDate(walks);
+
+  const handleGoalChange = (km: number) => {
+    setWeeklyGoal(km);
+    setGoalKm(km);
+  };
 
   if (loading) {
     return (
@@ -87,6 +97,7 @@ export default function HistoryPage() {
         <span className="text-[13px] font-medium text-mw-gray-500">이번 달</span>
       </header>
       <div className="flex-1 overflow-y-auto px-4 pb-4 pt-3">
+        <WeeklyGoalCard progressKm={weeklyProgress} goalKm={goalKm} onGoalChange={handleGoalChange} />
         <MonthSummaryCard
           totalWalks={thisMonth.length}
           totalDistanceKm={totalDistance / 1000}

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { MapPin, Navigation } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,14 +9,13 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { useRouteStore } from '@/stores/routeStore';
 import { createClient } from '@/lib/supabase/client';
 import BottomSheet from '@/components/layout/BottomSheet';
-import TimeSelector from '@/components/walk/TimeSelector';
-import RouteCard from '@/components/walk/RouteCard';
 import RoutePolyline from '@/components/map/RoutePolyline';
 import RouteDirectionMarkers from '@/components/map/RouteDirectionMarkers';
 import OriginMarker from '@/components/map/OriginMarker';
-import PetSelector from '@/components/walk/PetSelector';
+import PastRoutes from '@/components/map/PastRoutes';
 import TodayStatus from '@/components/walk/TodayStatus';
-import type { Coordinate } from '@/types/route';
+import MainBottomContent from '@/components/walk/MainBottomContent';
+import type { Coordinate, GeneratedRoute } from '@/types/route';
 
 const KakaoMap = dynamic(() => import('@/components/map/KakaoMap'), {
   ssr: false,
@@ -29,7 +27,6 @@ const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
 interface PetInfo { id: string; name: string; size: string | null }
 
 export default function AppMainPage() {
-  const router = useRouter();
   const { position, error: gpsError, isLoading: gpsLoading } = useGeolocation();
   const [duration, setDuration] = useState(30);
   const [mapInstance, setMapInstance] = useState<kakao.maps.Map | null>(null);
@@ -38,7 +35,7 @@ export default function AppMainPage() {
   const [pets, setPets] = useState<PetInfo[]>([]);
   const [selectedPet, setSelectedPet] = useState<PetInfo | null>(null);
 
-  const { routes, selectedIndex, isGenerating, error: routeError, generateRoutes, selectRoute, setSelectedPet: setStorePet, reset } = useRouteStore();
+  const { routes, selectedIndex, isGenerating, error: routeError, generateRoutes, setSelectedPet: setStorePet, reset } = useRouteStore();
   const center = position ?? DEFAULT_CENTER;
   const selectedRoute = routes[selectedIndex] ?? null;
   const origin = customOrigin ?? position;
@@ -69,6 +66,14 @@ export default function AppMainPage() {
 
   const handleReset = () => { reset(); setCustomOrigin(null); };
 
+  const handleFavoriteSelect = useCallback((route: GeneratedRoute) => {
+    if (mapInstance && route.path.length >= 2) {
+      const bounds = new window.kakao.maps.LatLngBounds();
+      route.path.forEach((c) => bounds.extend(new window.kakao.maps.LatLng(c.lat, c.lng)));
+      mapInstance.setBounds(bounds);
+    }
+  }, [mapInstance]);
+
   return (
     <div className="relative h-full overflow-hidden">
       <KakaoMap center={center} currentPosition={position} level={3} className="h-full w-full" onMapReady={setMapInstance} onMapClick={routes.length === 0 ? handleMapClick : undefined} />
@@ -80,6 +85,7 @@ export default function AppMainPage() {
         </>
       )}
       {mapInstance && customOrigin && <OriginMarker map={mapInstance} position={customOrigin} />}
+      {mapInstance && routes.length === 0 && <PastRoutes map={mapInstance} />}
 
       <TodayStatus />
 
@@ -108,41 +114,13 @@ export default function AppMainPage() {
       )}
 
       <BottomSheet isExpanded={sheetExpanded} onToggle={setSheetExpanded} collapsedHeight={routes.length > 0 ? 300 : pets.length > 0 ? 310 : 260}>
-        {routes.length === 0 ? (
-          <>
-            <h2 className="text-[20px] font-bold text-mw-gray-900">산책 시간</h2>
-            <p className="mt-1 text-[13px] text-mw-gray-500">
-              {customOrigin ? '📍 출발 위치를 지정했어요' : '지도를 탭하면 출발 위치를 변경할 수 있어요'}
-            </p>
-            <PetSelector pets={pets} selectedId={selectedPet?.id ?? null} onSelect={setSelectedPet} />
-            <div className="mt-3"><TimeSelector value={duration} onChange={setDuration} /></div>
-            <button onClick={handleGenerate} disabled={isGenerating || !origin} className="mt-3 w-full rounded-mw bg-mw-green-500 py-3.5 text-[15px] font-semibold text-white transition-transform active:scale-[0.97] disabled:opacity-40">
-              {isGenerating ? '루트 생성 중...' : '루트 만들기'}
-            </button>
-            {routeError && (
-              <div className="mt-2 text-center">
-                <p className="text-[13px] text-mw-danger">{routeError}</p>
-                <button onClick={handleReset} className="mt-1 text-[13px] font-medium text-mw-green-500">
-                  다시 시도
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-[20px] font-bold text-mw-gray-900">추천 루트</h2>
-              <button onClick={handleReset} className="text-[13px] font-medium text-mw-gray-500">다시 선택</button>
-            </div>
-            <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
-              {routes.map((route, idx) => (
-                <div key={route.id} className="w-[calc(100%-28px)] shrink-0 snap-center">
-                  <RouteCard route={route} isSelected={idx === selectedIndex} onSelect={() => selectRoute(idx)} onStartWalk={() => router.push('/app/walk')} />
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+        <MainBottomContent
+          duration={duration} onDurationChange={setDuration}
+          pets={pets} selectedPet={selectedPet} onSelectPet={setSelectedPet}
+          isGenerating={isGenerating} canGenerate={!!origin} routeError={routeError}
+          onGenerate={handleGenerate} onReset={handleReset}
+          hasCustomOrigin={!!customOrigin} onFavoriteSelect={handleFavoriteSelect}
+        />
       </BottomSheet>
     </div>
   );
