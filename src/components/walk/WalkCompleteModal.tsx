@@ -35,8 +35,8 @@ export default function WalkCompleteModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-sm animate-slide-up rounded-t-mw-xl bg-gradient-to-b from-mw-green-50 to-white px-6 pb-8 pt-6 sm:mx-6 sm:rounded-mw-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="mx-6 w-full max-w-sm animate-slide-up rounded-mw-xl bg-gradient-to-b from-mw-green-50 to-white px-6 pb-8 pt-6">
         {/* 경로 미니맵 */}
         <div className="flex h-[120px] items-center justify-center rounded-mw-lg bg-white/80">
           {svg ? (
