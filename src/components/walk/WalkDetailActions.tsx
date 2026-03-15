@@ -43,10 +43,12 @@ export default function WalkDetailActions({ walkId }: WalkDetailActionsProps) {
   };
 
   const handleSaveMemo = () => {
-    setWalkMemo(walkId, draft);
-    setMemo(draft.trim());
+    const trimmed = draft.trim();
+    if (!trimmed && !memo) { setEditing(false); return; }
+    setWalkMemo(walkId, trimmed);
+    setMemo(trimmed);
     setEditing(false);
-    toast.success('메모가 저장되었어요');
+    if (trimmed) toast.success('메모가 저장되었어요');
   };
 
   const handleStartEdit = () => {

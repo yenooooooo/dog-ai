@@ -43,7 +43,7 @@ export default function WalkCompleteModal({
       const shared = await shareImage(url);
       if (shared) { toast.success('이미지를 저장/공유했어요!'); }
       else { await downloadImage(url, `mungwalk-${Date.now()}.png`); toast.success('이미지가 저장되었어요!'); }
-    } catch { toast.error('저장에 실패했어요.'); }
+    } catch (err) { console.error('공유 카드 저장 실패:', err); toast.error('저장에 실패했어요.'); }
     finally { setSaving(false); }
   };
 
