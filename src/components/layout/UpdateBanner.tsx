@@ -39,11 +39,8 @@ export default function UpdateBanner() {
   }, []);
 
   const handleUpdate = useCallback(() => {
-    // 새 버전으로 localStorage 갱신
-    fetch(`/api/version?t=${Date.now()}`, { cache: 'no-store' })
-      .then((r) => r.json())
-      .then(({ version }) => localStorage.setItem(VERSION_KEY, version))
-      .catch(() => {});
+    // 리로드 후 새 버전을 "현재"로 인식하도록 기존 버전 삭제
+    localStorage.removeItem(VERSION_KEY);
 
     // 산책 중이면 즉시 백업
     const store = useWalkStore.getState();
