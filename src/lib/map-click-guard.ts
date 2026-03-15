@@ -6,7 +6,7 @@ let blocked = false;
 
 export function blockMapClick(): void {
   blocked = true;
-  setTimeout(() => { blocked = false; }, 300);
+  setTimeout(() => { blocked = false; }, 500);
 }
 
 export function isMapClickBlocked(): boolean {
