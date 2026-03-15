@@ -3,19 +3,18 @@ import { z } from 'zod';
 
 import { generateWaypoints, adjustRadius } from '@/lib/route-generator';
 import { fetchWalkingRoute as fetchKakaoRoute } from '@/lib/kakao/route-api';
-import { fetchGoogleWalkingRoute } from '@/lib/google/walking-route';
+import { fetchTmapWalkingRoute } from '@/lib/tmap/walking-route';
 import { snapWaypointsToRoad } from '@/lib/kakao/snap-to-road';
 import { detectNearbyPark } from '@/lib/kakao/park-detect';
 import { generateParkRoutes } from '@/lib/park-route-generator';
 import type { GeneratedRoute, RouteSegment } from '@/types/route';
 import type { Coordinate } from '@/types/route';
 
-// 한국에서는 구글 도보 API 미지원 → 카카오 사용
-// 해외 서비스 확장 시 구글 전환 가능
-const useGoogle = false;
+// Tmap 키 있으면 보행자 경로, 없으면 카카오 차량 폴백
+const useTmap = !!process.env.TMAP_API_KEY;
 
 async function fetchRoute(origin: Coordinate, waypoints: Coordinate[]) {
-  if (useGoogle) return fetchGoogleWalkingRoute(origin, waypoints);
+  if (useTmap) return fetchTmapWalkingRoute(origin, waypoints);
   return fetchKakaoRoute(origin, waypoints);
 }
 
@@ -50,7 +49,7 @@ async function tryBuildRoutes(
         name: r.name, tags: r.tags,
         segments: [] as RouteSegment[],
         totalDistance: distance,
-        estimatedDuration: useGoogle ? Math.round(duration / 60) : Math.round(distance / walkSpeed),
+        estimatedDuration: useTmap ? Math.round(duration / 60) : Math.round(distance / walkSpeed),
         waypoints: r.waypoints.map((wp, i) => ({ ...wp, order: i })),
         path,
       } satisfies GeneratedRoute;

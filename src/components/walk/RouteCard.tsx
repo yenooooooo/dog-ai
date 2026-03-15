@@ -91,7 +91,7 @@ export default function RouteCard({ route, isSelected, onSelect, onStartWalk }: 
         ))}
       </div>
 
-      <p className="mt-2 text-[10px] text-mw-gray-300">{isPark ? '🌳 공원 안에서 자유롭게 걸어보세요' : '📌 참고 경로 — 안전한 인도와 산책로로 걸어주세요'}</p>
+      <p className="mt-2 text-[10px] text-mw-gray-300">{isPark ? '🌳 공원 안에서 자유롭게 걸어보세요' : '🚶 보행자 도로 기반 경로입니다'}</p>
 
       <div className="mt-2 flex items-center gap-4 text-[13px] text-mw-gray-500">
         <span className="flex items-center gap-1"><Route size={14} strokeWidth={1.75} />{formatDistance(route.totalDistance)}</span>
