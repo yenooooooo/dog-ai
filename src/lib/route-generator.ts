@@ -2,9 +2,10 @@
  * 순환 산책 루트 생성 알고리즘
  *
  * 1) 목표 거리 = 시간(분) × 속도(크기별)
- * 2) 반경 = 거리 / (2π) × 1.3 (최소 300m)
- * 3) 4개 웨이포인트 (90° 간격, 부드러운 원형)
- * 4) 각 웨이포인트 반경 ±15% 랜덤 변화 → 자연스러운 경로
+ * 2) 반경 = 거리 / (2π) × 도로보정
+ * 3) 3개 웨이포인트 (120° 간격, 깨끗한 삼각 순환)
+ *    → 4개는 출발지 근처를 왔다갔다하는 문제 발생
+ * 4) 각 웨이포인트 반경을 출발지 반대편에 배치 → 중복 경로 방지
  */
 import type { Coordinate } from '@/types/route';
 import { getPointAtBearing } from './geo-utils';
@@ -13,14 +14,15 @@ const SPEED_BY_SIZE: Record<string, number> = {
   small: 50, medium: 67, large: 83,
 };
 const DEFAULT_SPEED = 67;
-const ROAD_DETOUR_FACTOR = 1.3;
-// 4개 웨이포인트 → 삼각형보다 부드러운 원형 경로
-const WP_COUNT = 4;
-const ROUTE_SPREAD = 40;
-// 최소 반경: 목표 거리에 따라 동적으로 결정 (아래 함수에서 계산)
-const ABS_MIN_RADIUS = 100;
-// 각 웨이포인트 반경 ±15% 변화 → 자연스러운 비대칭
-const RADIUS_JITTER = 0.15;
+// 도로 우회 보정: 직선 거리 대비 도보는 약 1.4배
+const ROAD_DETOUR_FACTOR = 1.4;
+// 3개 웨이포인트 → 깨끗한 삼각 순환 (중복 없음)
+const WP_COUNT = 3;
+// 3개 루트 간 방향 간격
+const ROUTE_SPREAD = 120;
+const ABS_MIN_RADIUS = 80;
+// 웨이포인트 반경 ±10% 변화
+const RADIUS_JITTER = 0.10;
 
 function bearingToDirection(deg: number): string {
   const d = ((deg % 360) + 360) % 360;
@@ -48,20 +50,21 @@ export function generateWaypoints(
 ): { routes: WaypointSet[]; radius: number; targetDistance: number } {
   const speed = SPEED_BY_SIZE[petSize ?? ''] ?? DEFAULT_SPEED;
   const targetDistance = durationMinutes * speed;
-  const calculated = (targetDistance / (2 * Math.PI)) * ROAD_DETOUR_FACTOR;
-  // 최소 반경: 목표 거리의 1/20 또는 100m 중 큰 값
-  const minRadius = Math.max(targetDistance / 20, ABS_MIN_RADIUS);
+  // 삼각형 순환: 둘레 ≈ 3 × √3 × r ≈ 5.2r, 보정 포함
+  const calculated = (targetDistance / 5.2) * ROAD_DETOUR_FACTOR;
+  const minRadius = Math.max(targetDistance / 25, ABS_MIN_RADIUS);
   const radius = radiusOverride ?? Math.max(calculated, minRadius);
 
   const baseRotation = Math.random() * 360;
+  // 3개 루트: 각각 120° 회전 → 완전히 다른 방향
   const rotations = [0, ROUTE_SPREAD, ROUTE_SPREAD * 2];
 
   const routes = rotations.map((rotation) => {
     const mainBearing = baseRotation + rotation;
     const waypoints: Coordinate[] = [];
     for (let i = 0; i < WP_COUNT; i++) {
+      // 120° 간격으로 배치 → 출발지에서 한 방향으로 순환
       const bearing = (360 / WP_COUNT) * i + mainBearing;
-      // 각 웨이포인트마다 반경을 ±15% 랜덤 변화 → 자연스러운 경로
       const jitter = 1 + (Math.random() * 2 - 1) * RADIUS_JITTER;
       waypoints.push(getPointAtBearing(origin, bearing, radius * jitter));
     }
