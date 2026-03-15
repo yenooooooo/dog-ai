@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useWalkStore } from '@/stores/walkStore';
@@ -15,6 +16,7 @@ export function useWalkTracker() {
 
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const halfAlerted = useRef(false);
 
   useEffect(() => {
     if (isWalking && startedAt) {
@@ -26,6 +28,15 @@ export function useWalkTracker() {
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [isWalking, startedAt]);
+
+  // 목표 절반 도달 시 돌아가기 알림 (한 번만)
+  useEffect(() => {
+    if (!isWalking || targetDistance <= 0 || halfAlerted.current) return;
+    if (distance >= targetDistance * 0.5) {
+      halfAlerted.current = true;
+      toast.info('목표의 절반을 걸었어요. 슬슬 돌아갈 준비를!');
+    }
+  }, [isWalking, distance, targetDistance]);
 
   useEffect(() => {
     if (isWalking && !isPaused && position) addCoordinate(position);
@@ -41,6 +52,6 @@ export function useWalkTracker() {
     isWalking, isPaused, coordinates, distance, elapsed, targetDistance,
     startWalk, pauseWalk, resumeWalk,
     endWalk: handleEnd,
-    reset: () => { setElapsed(0); reset(); },
+    reset: () => { setElapsed(0); halfAlerted.current = false; reset(); },
   };
 }

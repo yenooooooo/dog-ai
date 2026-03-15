@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trash2, Pencil, Check, X } from 'lucide-react';
+import { Trash2, Pencil, Check, X, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { createClient } from '@/lib/supabase/client';
 import { getWalkMemo, setWalkMemo } from '@/lib/walk-memo';
+import DeleteWalkModal from '@/components/walk/DeleteWalkModal';
 
 interface WalkDetailActionsProps {
   walkId: string;
@@ -101,43 +102,32 @@ export default function WalkDetailActions({ walkId }: WalkDetailActionsProps) {
         )}
       </div>
 
+      {/* 링크 복사 버튼 */}
+      <button
+        onClick={async () => {
+          const url = `${window.location.origin}/app/history/${walkId}`;
+          try {
+            await navigator.clipboard.writeText(url);
+            toast.success('링크가 복사되었어요');
+          } catch { toast.error('링크 복사에 실패했어요'); }
+        }}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-mw bg-mw-green-50 py-3 text-[14px] font-semibold text-mw-green-600 active:scale-[0.97]"
+      >
+        <Link2 size={16} />
+        경로 링크 복사
+      </button>
+
       {/* 삭제 버튼 */}
       <button
         onClick={() => setShowConfirm(true)}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-mw bg-red-50 py-3 text-[14px] font-semibold text-mw-danger active:scale-[0.97]"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-mw bg-red-50 py-3 text-[14px] font-semibold text-mw-danger active:scale-[0.97]"
       >
         <Trash2 size={16} />
         기록 삭제
       </button>
 
-      {/* 삭제 확인 모달 */}
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-6 w-full max-w-sm rounded-mw-xl bg-white px-6 pb-6 pt-8 text-center">
-            <p className="text-[17px] font-bold text-mw-gray-900">
-              이 산책 기록을 삭제할까요?
-            </p>
-            <p className="mt-2 text-[13px] text-mw-gray-500">
-              삭제하면 되돌릴 수 없어요.
-            </p>
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => setShowConfirm(false)}
-                disabled={deleting}
-                className="flex-1 rounded-mw bg-mw-gray-100 py-3 text-[14px] font-semibold text-mw-gray-600 active:scale-[0.97] disabled:opacity-50"
-              >
-                취소
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="flex-1 rounded-mw bg-mw-danger py-3 text-[14px] font-semibold text-white active:scale-[0.97] disabled:opacity-50"
-              >
-                {deleting ? '삭제 중...' : '삭제'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteWalkModal deleting={deleting} onCancel={() => setShowConfirm(false)} onDelete={handleDelete} />
       )}
     </>
   );

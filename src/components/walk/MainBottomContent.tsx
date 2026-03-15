@@ -34,7 +34,7 @@ export default function MainBottomContent({
   hasCustomOrigin, onFavoriteSelect, onAddressSelect,
 }: MainBottomContentProps) {
   const router = useRouter();
-  const { routes, selectedIndex, selectRoute } = useRouteStore();
+  const { routes, selectedIndex, selectRoute, progressMessage } = useRouteStore();
 
   if (routes.length > 0) {
     return (
@@ -64,7 +64,7 @@ export default function MainBottomContent({
       <PetSelector pets={pets} selectedId={selectedPet?.id ?? null} onSelect={onSelectPet} />
       <div className="mt-3"><TimeSelector value={duration} onChange={onDurationChange} /></div>
       <button onClick={onGenerate} disabled={isGenerating || !canGenerate} className="mt-3 w-full rounded-mw bg-mw-green-500 py-3.5 text-[15px] font-semibold text-white transition-transform active:scale-[0.97] disabled:opacity-40">
-        {isGenerating ? '루트 생성 중...' : '루트 만들기'}
+        {isGenerating ? (progressMessage || '보행자 경로를 찾고 있어요...') : '루트 만들기'}
       </button>
       {routeError && (
         <div className="mt-2 text-center">

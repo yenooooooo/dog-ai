@@ -86,6 +86,7 @@ export default function RouteCard({ route, isSelected, onSelect, onStartWalk }: 
       <h3 className="mt-3 text-[17px] font-semibold text-mw-gray-900">{route.name}</h3>
 
       <div className="mt-1.5 flex flex-wrap gap-1.5">
+        <span className="rounded-md bg-mw-amber-50 px-2 py-0.5 text-[12px] font-medium text-mw-amber-600">새로운 길</span>
         {route.tags.map((tag) => (
           <span key={tag} className="rounded-md bg-mw-green-50 px-2 py-0.5 text-[12px] font-medium text-mw-green-600">{tag}</span>
         ))}

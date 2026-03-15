@@ -7,10 +7,8 @@ import { fetchTmapWalkingRoute } from '@/lib/tmap/walking-route';
 import { snapWaypointsToRoad } from '@/lib/kakao/snap-to-road';
 import { detectNearbyPark } from '@/lib/kakao/park-detect';
 import { generateParkRoutes } from '@/lib/park-route-generator';
-import type { GeneratedRoute, RouteSegment } from '@/types/route';
-import type { Coordinate } from '@/types/route';
+import type { GeneratedRoute, RouteSegment, Coordinate } from '@/types/route';
 
-// Tmap 키 있으면 보행자 경로, 없으면 카카오 차량 폴백
 const useTmap = !!process.env.TMAP_API_KEY;
 
 async function fetchRoute(origin: Coordinate, waypoints: Coordinate[]) {
@@ -24,8 +22,13 @@ const requestSchema = z.object({
   petSize: z.enum(['small', 'medium', 'large']).optional(),
 });
 
-const MAX_RETRIES = 5;
+const MAX_RETRIES = 3;
 const MAX_DIST_RATIO = 1.5;
+
+interface BuildResult {
+  routes: GeneratedRoute[];
+  error: string;
+}
 
 async function tryBuildRoutes(
   origin: { lat: number; lng: number },
@@ -33,8 +36,10 @@ async function tryBuildRoutes(
   walkSpeed: number,
   kakaoKey: string,
   useSnap: boolean
-) {
-  const snapped = useSnap
+): Promise<BuildResult> {
+  // Tmap 보행자 경로는 이미 인도 기반이므로 스냅 불필요
+  const shouldSnap = useSnap && !useTmap;
+  const snapped = shouldSnap
     ? await Promise.all(waypoints.map(async (r) => ({
         ...r,
         waypoints: kakaoKey ? await snapWaypointsToRoad(r.waypoints, kakaoKey) : r.waypoints,
@@ -60,16 +65,14 @@ async function tryBuildRoutes(
     .filter((r): r is PromiseFulfilledResult<GeneratedRoute> => r.status === 'fulfilled')
     .map((r) => r.value);
 
-  // 전부 실패 시 첫 번째 에러를 lastError에 저장
+  let error = '';
   if (fulfilled.length === 0) {
     const firstErr = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
-    if (firstErr) lastError = String(firstErr.reason);
+    if (firstErr) error = String(firstErr.reason);
   }
 
-  return fulfilled;
+  return { routes: fulfilled, error };
 }
-
-let lastError = '';
 
 export async function POST(request: Request) {
   try {
@@ -89,6 +92,7 @@ export async function POST(request: Request) {
 
     let currentRadius: number | undefined;
     let finalRoutes: GeneratedRoute[] = [];
+    let lastError = '';
 
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       const { routes, radius, targetDistance } = generateWaypoints(
@@ -96,11 +100,15 @@ export async function POST(request: Request) {
       );
 
       // 1차: 스냅 적용 (공공장소로 웨이포인트 보정)
-      finalRoutes = await tryBuildRoutes(origin, routes, walkSpeed, kakaoKey, true);
+      const first = await tryBuildRoutes(origin, routes, walkSpeed, kakaoKey, true);
+      finalRoutes = first.routes;
+      if (first.error) lastError = first.error;
 
       // 2차: 스냅 실패 시 원래 좌표로 폴백
       if (finalRoutes.length === 0) {
-        finalRoutes = await tryBuildRoutes(origin, routes, walkSpeed, kakaoKey, false);
+        const second = await tryBuildRoutes(origin, routes, walkSpeed, kakaoKey, false);
+        finalRoutes = second.routes;
+        if (second.error) lastError = second.error;
       }
 
       if (finalRoutes.length === 0) {
@@ -115,6 +123,7 @@ export async function POST(request: Request) {
         continue;
       }
 
+      // 첫 시도 성공이면 바로 반환 (불필요한 반복 방지)
       const adjusted = adjustRadius(finalRoutes[0].totalDistance, targetDistance, currentRadius ?? radius);
       if (!adjusted) break;
       currentRadius = adjusted;
@@ -131,11 +140,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ routes: finalRoutes });
   } catch (err) {
     console.error('루트 생성 실패:', err);
+    const isValidation = err instanceof z.ZodError;
     const errMsg = err instanceof Error ? err.message : '';
-    const status = err instanceof z.ZodError ? 400 : 500;
     return NextResponse.json(
-      { error: `루트 생성에 실패했어요. ${errMsg}`, code: err instanceof z.ZodError ? 'VALIDATION_ERROR' : 'INTERNAL_ERROR' },
-      { status }
+      { error: `루트 생성에 실패했어요. ${errMsg}`, code: isValidation ? 'VALIDATION_ERROR' : 'INTERNAL_ERROR' },
+      { status: isValidation ? 400 : 500 }
     );
   }
 }

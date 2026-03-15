@@ -17,6 +17,7 @@ import WalkCompleteModal from '@/components/walk/WalkCompleteModal';
 import ShortWalkPrompt from '@/components/walk/ShortWalkPrompt';
 import WalkTagManager from '@/components/walk/WalkTagManager';
 import NightWarning from '@/components/walk/NightWarning';
+import WeatherWarning from '@/components/walk/WeatherWarning';
 import WalkStartPanel from '@/components/walk/WalkStartPanel';
 import RoutePolyline from '@/components/map/RoutePolyline';
 import RouteDirectionMarkers from '@/components/map/RouteDirectionMarkers';
@@ -48,14 +49,11 @@ export default function WalkPage() {
   const referenceRoute = routes[selectedIndex] ?? null;
   const center = position ?? { lat: 37.5665, lng: 126.978 };
 
-  /** 가이드 산책 — 루트의 총 거리를 목표로 */
-  const handleStartGuide = () => {
+  const handleStartGuide = () => { // 가이드 산책 — 루트 거리를 목표로
     if (!position) { toast.error('현재 위치를 확인할 수 없어요.'); return; }
     startWalk(referenceRoute?.totalDistance);
   };
-
-  /** 자유 산책 — 목표 거리 없음 (진행률 바 미표시) */
-  const handleStartFree = () => {
+  const handleStartFree = () => { // 자유 산책 — 목표 거리 없음
     if (!position) { toast.error('현재 위치를 확인할 수 없어요.'); return; }
     startWalk(0);
   };
@@ -110,6 +108,7 @@ export default function WalkPage() {
 
       <WalkTagManager map={mapInstance} position={position} isOpen={showTags} onClose={() => setShowTags(false)} />
       <NightWarning />
+      <WeatherWarning />
       {!isWalking && (gpsLoading || gpsError) && (
         <div className="absolute left-5 top-3 z-30 rounded-mw bg-white/90 px-3 py-2 shadow-sm backdrop-blur">
           <p className={`text-[13px] ${gpsError ? 'text-mw-danger' : 'text-mw-gray-500'}`}>
