@@ -42,7 +42,7 @@ export default function LevelCard({ walks }: LevelCardProps) {
             Lv.{progress.current.level} {progress.current.name}
           </p>
           <p className="text-[12px] text-mw-gray-500">
-            총 {totalKm.toFixed(1)}km 걸었어요
+            총 {totalKm.toFixed(2)}km 걸었어요
           </p>
         </div>
       </div>

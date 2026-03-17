@@ -116,9 +116,11 @@ export const useWalkStore = create<WalkStore>((set, get) => ({
   },
 
   endWalk: () => {
-    const { coordinates, distance, startedAt, pausedDuration } = get();
+    const { coordinates, distance, startedAt, pausedDuration, pauseStartedAt } = get();
     const totalMs = startedAt ? Date.now() - startedAt : 0;
-    const durationSec = Math.round((totalMs - pausedDuration) / 1000);
+    // 현재 일시정지 중이면 그 시간도 제외
+    const activePause = pauseStartedAt ? Date.now() - pauseStartedAt : 0;
+    const durationSec = Math.max(0, Math.round((totalMs - pausedDuration - activePause) / 1000));
     set({ isWalking: false, isPaused: false });
     clearBackup();
     return { coordinates, distance, durationSec, startedAt: startedAt ?? Date.now() };

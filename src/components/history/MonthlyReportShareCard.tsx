@@ -87,9 +87,9 @@ const CardContent = forwardRef<HTMLDivElement, CardContentProps>(
         <div style={{ fontSize: 28, fontWeight: 800, marginBottom: 24 }}>월간 리포트</div>
 
         <Row label="총 산책" value={`${report.totalWalks}회`} />
-        <Row label="총 거리" value={`${report.totalDistanceKm.toFixed(1)}km`} />
+        <Row label="총 거리" value={`${report.totalDistanceKm.toFixed(2)}km`} />
         <Row label="총 시간" value={timeText} />
-        <Row label="평균 거리" value={`${report.avgDistanceKm.toFixed(1)}km`} />
+        <Row label="평균 거리" value={`${report.avgDistanceKm.toFixed(2)}km`} />
         <Row label="주요 요일" value={dayOfWeekLabel(report.busiestDayOfWeek)} />
 
         {changeText && (

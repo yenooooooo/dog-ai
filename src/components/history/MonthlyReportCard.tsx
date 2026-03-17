@@ -61,13 +61,13 @@ export default function MonthlyReportCard({ report }: MonthlyReportCardProps) {
           {/* 주요 통계 */}
           <div className="grid grid-cols-3 gap-2">
             <StatCell label="총 산책" value={`${report.totalWalks}회`} />
-            <StatCell label="총 거리" value={`${report.totalDistanceKm.toFixed(1)}km`} />
+            <StatCell label="총 거리" value={`${report.totalDistanceKm.toFixed(2)}km`} />
             <StatCell label="총 시간" value={timeText} />
           </div>
 
           {/* 평균 + 추가 정보 */}
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <StatCell label="평균 거리" value={`${report.avgDistanceKm.toFixed(1)}km`} />
+            <StatCell label="평균 거리" value={`${report.avgDistanceKm.toFixed(2)}km`} />
             <StatCell label="평균 시간" value={`${report.avgDurationMin}분`} />
           </div>
 

@@ -57,12 +57,12 @@ function BarPair({
         <div
           className="w-[10px] rounded-t-sm bg-mw-gray-200"
           style={{ height: `${showLastH}px` }}
-          title={`지난주 ${lastKm.toFixed(1)}km`}
+          title={`지난주 ${lastKm.toFixed(2)}km`}
         />
         <div
           className="w-[10px] rounded-t-sm bg-green-500"
           style={{ height: `${showThisH}px` }}
-          title={`이번주 ${thisKm.toFixed(1)}km`}
+          title={`이번주 ${thisKm.toFixed(2)}km`}
         />
       </div>
       <span className="text-[10px] text-mw-gray-500">{dayLabel}</span>
@@ -108,11 +108,11 @@ export default function WeekComparisonChart({ walks }: WeekComparisonChartProps)
       <div className="mt-3 flex items-center justify-center gap-4 text-[11px] text-mw-gray-500">
         <span className="flex items-center gap-1">
           <span className="inline-block h-2 w-2 rounded-sm bg-green-500" />
-          이번주 {comparison.thisWeekTotalKm.toFixed(1)}km
+          이번주 {comparison.thisWeekTotalKm.toFixed(2)}km
         </span>
         <span className="flex items-center gap-1">
           <span className="inline-block h-2 w-2 rounded-sm bg-mw-gray-200" />
-          지난주 {comparison.lastWeekTotalKm.toFixed(1)}km
+          지난주 {comparison.lastWeekTotalKm.toFixed(2)}km
         </span>
       </div>
     </div>

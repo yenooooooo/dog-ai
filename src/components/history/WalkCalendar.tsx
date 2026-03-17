@@ -79,7 +79,7 @@ export default function WalkCalendar({ walks }: WalkCalendarProps) {
         <div className="mt-2 rounded-mw-sm bg-mw-green-50 px-3 py-2 text-[12px] text-mw-gray-700">
           <span className="font-semibold">{selected.date}</span>
           {' — '}
-          {selected.walkCount}회 산책, {selected.totalKm.toFixed(1)}km
+          {selected.walkCount}회 산책, {selected.totalKm.toFixed(2)}km
         </div>
       )}
     </div>
