@@ -12,6 +12,9 @@ import { useWalkStore, type WalkResult } from '@/stores/walkStore';
 import { saveWalkToDb } from '@/lib/supabase/walk-save';
 import { clearWalkPhotos, getWalkPhotos } from '@/components/walk/PhotoCapture';
 import { saveWalkPhotos } from '@/lib/walk-photo-storage';
+import { saveRouteReview } from '@/lib/route-review';
+import { setHealthMemo } from '@/lib/health-memo';
+import type { HealthMemo } from '@/types/health-memo';
 import WalkStats from '@/components/walk/WalkStats';
 import WalkActionBar from '@/components/walk/WalkActionBar';
 import WalkCompleteModal from '@/components/walk/WalkCompleteModal';
@@ -50,14 +53,9 @@ export default function WalkPage() {
   const referenceRoute = routes[selectedIndex] ?? null;
   const center = position ?? { lat: 37.5665, lng: 126.978 };
 
-  const handleStartGuide = () => {
-    if (!position) { toast.error('현재 위치를 확인할 수 없어요.'); return; }
-    startWalk(referenceRoute?.totalDistance);
-  };
-  const handleStartFree = () => {
-    if (!position) { toast.error('현재 위치를 확인할 수 없어요.'); return; }
-    startWalk(0);
-  };
+  const checkPos = () => { if (!position) { toast.error('현재 위치를 확인할 수 없어요.'); return false; } return true; };
+  const handleStartGuide = () => { if (checkPos()) startWalk(referenceRoute?.totalDistance); };
+  const handleStartFree = () => { if (checkPos()) startWalk(0); };
   const handleRecenter = () => {
     if (!mapInstance || !position) return;
     mapInstance.panTo(new window.kakao.maps.LatLng(position.lat, position.lng));
@@ -76,7 +74,7 @@ export default function WalkPage() {
   };
 
   const handleDiscard = () => { clearWalkPhotos(); setResult(null); reset(); router.push('/app'); };
-  const handleConfirm = async () => {
+  const handleConfirm = async (extras: { rating: number; comment: string; healthMemo: HealthMemo | null }) => {
     if (result) {
       try {
         const walkId = await saveWalkToDb({
@@ -86,6 +84,8 @@ export default function WalkPage() {
         });
         const tempPhotos = getWalkPhotos();
         if (tempPhotos.length > 0) saveWalkPhotos(walkId, tempPhotos);
+        if (extras.rating > 0) saveRouteReview(walkId, extras.rating, extras.comment);
+        if (extras.healthMemo) setHealthMemo(walkId, extras.healthMemo);
         toast.success('산책 기록이 저장되었어요!');
       } catch { toast.error('기록 저장에 실패했어요.'); }
     }
@@ -140,7 +140,7 @@ export default function WalkPage() {
       )}
 
       {result && isShort && (
-        <ShortWalkPrompt distance={result.distance} durationSec={result.durationSec} onSave={handleConfirm} onDiscard={handleDiscard} />
+        <ShortWalkPrompt distance={result.distance} durationSec={result.durationSec} onSave={() => handleConfirm({ rating: 0, comment: '', healthMemo: null })} onDiscard={handleDiscard} />
       )}
       {result && !isShort && (
         <WalkCompleteModal distance={result.distance} durationSec={result.durationSec} coordinates={result.coordinates} petName={petName} photoCount={photoCount} onConfirm={handleConfirm} />

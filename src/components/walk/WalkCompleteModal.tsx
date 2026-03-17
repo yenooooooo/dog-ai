@@ -8,8 +8,6 @@ import ShareCard from '@/components/walk/ShareCard';
 import { captureShareCard, downloadImage, shareImage } from '@/lib/share-card';
 import { pathToSvg } from '@/lib/path-to-svg';
 import { getWalkCompleteMessage } from '@/lib/walk-messages';
-import { saveRouteReview } from '@/lib/route-review';
-import { setHealthMemo } from '@/lib/health-memo';
 import RouteReview from '@/components/walk/RouteReview';
 import HealthMemoForm from '@/components/walk/HealthMemoForm';
 import type { Coordinate } from '@/types/route';
@@ -21,7 +19,7 @@ interface WalkCompleteModalProps {
   coordinates: Coordinate[];
   petName?: string;
   photoCount?: number;
-  onConfirm: () => void;
+  onConfirm: (extras: { rating: number; comment: string; healthMemo: HealthMemo | null }) => void;
 }
 
 export default function WalkCompleteModal({
@@ -31,7 +29,6 @@ export default function WalkCompleteModal({
   const [saving, setSaving] = useState(false);
   const reviewRef = useRef<{ rating: number; comment: string }>({ rating: 0, comment: '' });
   const healthMemoRef = useRef<HealthMemo | null>(null);
-  const walkKey = `walk-${Date.now()}`;
   const km = (distance / 1000).toFixed(2);
   const mins = Math.round(durationSec / 60);
   const avgSpeed = durationSec > 0 ? ((distance / durationSec) * 60).toFixed(0) : '0';
@@ -60,10 +57,11 @@ export default function WalkCompleteModal({
   };
 
   const handleConfirm = () => {
-    const { rating, comment } = reviewRef.current;
-    if (rating > 0) saveRouteReview(walkKey, rating, comment);
-    if (healthMemoRef.current) setHealthMemo(walkKey, healthMemoRef.current);
-    onConfirm();
+    onConfirm({
+      rating: reviewRef.current.rating,
+      comment: reviewRef.current.comment,
+      healthMemo: healthMemoRef.current,
+    });
   };
 
   return (
