@@ -37,8 +37,8 @@ export default function HistoryShareCard({
     <div className="mt-4 rounded-mw-lg border border-mw-gray-100 bg-white p-4">
       <p className="mb-3 text-[14px] font-bold text-mw-gray-900">📸 공유 카드</p>
 
-      <div className="mx-auto h-[225px] w-[180px] overflow-hidden rounded-mw-sm shadow-sm">
-        <div className="origin-top-left scale-[0.5]">
+      <div className="mx-auto h-[256px] w-[144px] overflow-hidden rounded-mw-sm shadow-sm">
+        <div className="origin-top-left scale-[0.4]">
           <ShareCard ref={cardRef} coordinates={coordinates} distance={distance} durationSec={durationSec} petName={petName} />
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { toPng } from 'html-to-image';
 
-const PIXEL_RATIO = 3; // 360×450 → 1080×1350 (인스타 4:5)
+const PIXEL_RATIO = 3; // 360×640 → 1080×1920 (인스타 스토리 9:16)
 
 export async function captureShareCard(
   element: HTMLElement
