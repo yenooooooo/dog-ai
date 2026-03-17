@@ -11,9 +11,9 @@ interface GeolocationState {
   isLoading: boolean;
 }
 
-const ACCURACY_THRESHOLD = 30; // 정확도 30m 초과 시 무시
-const JUMP_THRESHOLD = 200; // 이전 위치 대비 200m 이상 점프 무시
-const MIN_MOVE_METERS = 3; // 최소 3m 이상 이동해야 기록 (지그재그 방지)
+const ACCURACY_THRESHOLD = 50; // 정확도 50m 초과 시 무시 (도시 모바일 GPS 보통 30~60m)
+const JUMP_THRESHOLD = 500; // 이전 위치 대비 500m 이상 점프 무시
+const MIN_MOVE_METERS = 3; // 최소 3m 이상 이동해야 기록 (노이즈 방지)
 const MIN_INTERVAL_MS = 5000; // 최소 5초 간격
 
 export function useGeolocation() {

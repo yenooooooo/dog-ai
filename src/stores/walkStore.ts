@@ -5,6 +5,9 @@ import type { Coordinate } from '@/types/route';
 
 const BACKUP_KEY = 'mw_walk_backup';
 const BACKUP_INTERVAL_MS = 30_000;
+// 최대 보행 속도 제한: 10m/업데이트 (5초 간격 기준 2m/s = 7.2km/h)
+// GPS 노이즈로 인한 거리 부풀림 방지
+const MAX_DIST_PER_UPDATE = 10;
 
 export interface WalkResult {
   coordinates: Coordinate[];
@@ -47,11 +50,7 @@ function clearBackup(): void {
 }
 
 function saveBackup(state: BackupData): void {
-  try {
-    localStorage.setItem(BACKUP_KEY, JSON.stringify(state));
-  } catch {
-    // 저장 실패 무시
-  }
+  try { localStorage.setItem(BACKUP_KEY, JSON.stringify(state)); } catch { /* noop */ }
 }
 
 function loadBackup(): BackupData | null {
@@ -97,7 +96,9 @@ export const useWalkStore = create<WalkStore>((set, get) => ({
     const { coordinates, distance, isPaused, lastBackupAt } = get();
     if (isPaused) return;
     const prev = coordinates[coordinates.length - 1];
-    const added = prev ? getDistanceMeters(prev, coord) : 0;
+    const raw = prev ? getDistanceMeters(prev, coord) : 0;
+    // GPS 노이즈 거리 부풀림 방지: 최대 속도 캡 적용
+    const added = Math.min(raw, MAX_DIST_PER_UPDATE);
     const now = Date.now();
     const newCoords = [...coordinates, coord];
     const newDist = distance + added;
