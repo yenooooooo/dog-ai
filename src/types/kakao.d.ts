@@ -32,6 +32,7 @@ declare namespace kakao.maps {
   class Polyline {
     constructor(options: PolylineOptions);
     setMap(map: Map | null): void;
+    setPath(path: LatLng[]): void;
     getLength(): number;
   }
 

@@ -11,10 +11,13 @@ interface GeolocationState {
   isLoading: boolean;
 }
 
-const ACCURACY_THRESHOLD = 50; // 정확도 50m 초과 시 무시 (도시 모바일 GPS 보통 30~60m)
-const JUMP_THRESHOLD = 500; // 이전 위치 대비 500m 이상 점프 무시
-const MIN_MOVE_METERS = 3; // 최소 3m 이상 이동해야 기록 (노이즈 방지)
-const MIN_INTERVAL_MS = 5000; // 최소 5초 간격
+const ACCURACY_THRESHOLD = 50;
+const JUMP_THRESHOLD = 500;
+const MIN_MOVE_METERS = 3;
+const MIN_INTERVAL_MS = 5000;
+// 방향 급변 필터: 짧은 거리(15m 이내)에서 90도 이상 꺾이면 노이즈
+const ANGLE_FILTER_DIST = 15;
+const ANGLE_FILTER_DEG = 90;
 
 export function useGeolocation() {
   const [state, setState] = useState<GeolocationState>({
@@ -26,6 +29,7 @@ export function useGeolocation() {
   const watchIdRef = useRef<number | null>(null);
   const lastTimeRef = useRef(0);
   const lastPosRef = useRef<Coordinate | null>(null);
+  const prevPosRef = useRef<Coordinate | null>(null); // 2개 전 좌표 (방향 계산용)
 
   const startWatching = useCallback(() => {
     if (!navigator.geolocation) {
@@ -55,11 +59,23 @@ export function useGeolocation() {
         // 비정상 점프 + 최소 이동 거리 필터링
         if (lastPosRef.current) {
           const dist = getDistanceMeters(lastPosRef.current, coord);
-          if (dist > JUMP_THRESHOLD) return; // 점프 무시
-          if (dist < MIN_MOVE_METERS) return; // 노이즈 무시 (지그재그 방지)
+          if (dist > JUMP_THRESHOLD) return;
+          if (dist < MIN_MOVE_METERS) return;
+
+          // 방향 급변 필터: 짧은 거리에서 급격한 방향 전환 = GPS 노이즈
+          if (prevPosRef.current && dist < ANGLE_FILTER_DIST) {
+            const prev = lastPosRef.current;
+            const pp = prevPosRef.current;
+            const a1 = Math.atan2(prev.lng - pp.lng, prev.lat - pp.lat);
+            const a2 = Math.atan2(coord.lng - prev.lng, coord.lat - prev.lat);
+            const diff = Math.abs(a2 - a1) * (180 / Math.PI);
+            const angle = diff > 180 ? 360 - diff : diff;
+            if (angle > ANGLE_FILTER_DEG) return;
+          }
         }
 
         lastTimeRef.current = now;
+        prevPosRef.current = lastPosRef.current;
         lastPosRef.current = coord;
         setState({ position: coord, error: null, isLoading: false });
       },
