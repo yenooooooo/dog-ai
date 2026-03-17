@@ -11,6 +11,7 @@ import { useRouteStore } from '@/stores/routeStore';
 import { useWalkStore, type WalkResult } from '@/stores/walkStore';
 import { saveWalkToDb } from '@/lib/supabase/walk-save';
 import { clearWalkPhotos, getWalkPhotos } from '@/components/walk/PhotoCapture';
+import { saveWalkPhotos } from '@/lib/walk-photo-storage';
 import WalkStats from '@/components/walk/WalkStats';
 import WalkActionBar from '@/components/walk/WalkActionBar';
 import WalkCompleteModal from '@/components/walk/WalkCompleteModal';
@@ -49,15 +50,14 @@ export default function WalkPage() {
   const referenceRoute = routes[selectedIndex] ?? null;
   const center = position ?? { lat: 37.5665, lng: 126.978 };
 
-  const handleStartGuide = () => { // 가이드 산책 — 루트 거리를 목표로
+  const handleStartGuide = () => {
     if (!position) { toast.error('현재 위치를 확인할 수 없어요.'); return; }
     startWalk(referenceRoute?.totalDistance);
   };
-  const handleStartFree = () => { // 자유 산책 — 목표 거리 없음
+  const handleStartFree = () => {
     if (!position) { toast.error('현재 위치를 확인할 수 없어요.'); return; }
     startWalk(0);
   };
-
   const handleRecenter = () => {
     if (!mapInstance || !position) return;
     mapInstance.panTo(new window.kakao.maps.LatLng(position.lat, position.lng));
@@ -79,11 +79,13 @@ export default function WalkPage() {
   const handleConfirm = async () => {
     if (result) {
       try {
-        await saveWalkToDb({
+        const walkId = await saveWalkToDb({
           startedAt: new Date(result.startedAt).toISOString(),
           distanceMeters: Math.round(result.distance),
           durationSeconds: result.durationSec, coordinates: result.coordinates, petId,
         });
+        const tempPhotos = getWalkPhotos();
+        if (tempPhotos.length > 0) saveWalkPhotos(walkId, tempPhotos);
         toast.success('산책 기록이 저장되었어요!');
       } catch { toast.error('기록 저장에 실패했어요.'); }
     }

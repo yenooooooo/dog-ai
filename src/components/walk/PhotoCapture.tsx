@@ -5,13 +5,7 @@ import { Camera, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { Coordinate } from '@/types/route';
-
-interface WalkPhoto {
-  id: string;
-  dataUrl: string;
-  location: { lat: number; lng: number };
-  timestamp: number;
-}
+import type { WalkPhoto } from '@/types/walk-photo';
 
 interface PhotoCaptureProps {
   position: Coordinate | null;
@@ -68,7 +62,7 @@ export default function PhotoCapture({ position }: PhotoCaptureProps) {
       const photo: WalkPhoto = {
         id: `photo_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
         dataUrl,
-        location: { lat: position.lat, lng: position.lng },
+        coordinate: { lat: position.lat, lng: position.lng },
         timestamp: Date.now(),
       };
       const updated = [...getPhotos(), photo].slice(-MAX_PHOTOS);

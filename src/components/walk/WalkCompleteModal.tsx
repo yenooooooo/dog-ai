@@ -9,8 +9,11 @@ import { captureShareCard, downloadImage, shareImage } from '@/lib/share-card';
 import { pathToSvg } from '@/lib/path-to-svg';
 import { getWalkCompleteMessage } from '@/lib/walk-messages';
 import { saveRouteReview } from '@/lib/route-review';
+import { setHealthMemo } from '@/lib/health-memo';
 import RouteReview from '@/components/walk/RouteReview';
+import HealthMemoForm from '@/components/walk/HealthMemoForm';
 import type { Coordinate } from '@/types/route';
+import type { HealthMemo } from '@/types/health-memo';
 
 interface WalkCompleteModalProps {
   distance: number;
@@ -27,6 +30,7 @@ export default function WalkCompleteModal({
   const cardRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
   const reviewRef = useRef<{ rating: number; comment: string }>({ rating: 0, comment: '' });
+  const healthMemoRef = useRef<HealthMemo | null>(null);
   const walkKey = `walk-${Date.now()}`;
   const km = (distance / 1000).toFixed(2);
   const mins = Math.round(durationSec / 60);
@@ -51,9 +55,14 @@ export default function WalkCompleteModal({
     reviewRef.current = { rating, comment };
   };
 
+  const handleHealthMemo = (memo: HealthMemo) => {
+    healthMemoRef.current = memo;
+  };
+
   const handleConfirm = () => {
     const { rating, comment } = reviewRef.current;
     if (rating > 0) saveRouteReview(walkKey, rating, comment);
+    if (healthMemoRef.current) setHealthMemo(walkKey, healthMemoRef.current);
     onConfirm();
   };
 
@@ -66,6 +75,7 @@ export default function WalkCompleteModal({
       <div className="mx-6 max-h-[90dvh] w-full max-w-sm animate-slide-up overflow-y-auto rounded-mw-xl bg-gradient-to-b from-mw-green-50 to-white px-6 pb-8 pt-6">
         <WalkCompleteStats svg={svg} message={message} km={km} mins={mins} avgSpeed={avgSpeed} kcal={kcal} photoCount={photoCount} />
         <RouteReview onReview={handleReview} />
+        <HealthMemoForm onSave={handleHealthMemo} />
         <button onClick={handleSave} disabled={saving} className="mt-4 flex w-full items-center justify-center gap-2 rounded-mw bg-mw-green-50 py-3 text-[14px] font-semibold text-mw-green-600 active:scale-[0.97] disabled:opacity-50">
           <Download size={16} /> 산책 카드 저장 / 공유
         </button>

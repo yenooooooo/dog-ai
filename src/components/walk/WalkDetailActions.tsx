@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { getWalkMemo, setWalkMemo } from '@/lib/walk-memo';
 import DeleteWalkModal from '@/components/walk/DeleteWalkModal';
+import HealthMemoDisplay from '@/components/walk/HealthMemoDisplay';
 
 interface WalkDetailActionsProps {
   walkId: string;
@@ -58,6 +59,9 @@ export default function WalkDetailActions({ walkId }: WalkDetailActionsProps) {
 
   return (
     <>
+      {/* 건강 메모 */}
+      <HealthMemoDisplay walkId={walkId} />
+
       {/* 메모 섹션 */}
       <div className="mt-4 rounded-mw-lg border border-mw-gray-100 bg-white p-4">
         <div className="flex items-center justify-between">

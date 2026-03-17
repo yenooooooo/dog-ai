@@ -26,7 +26,8 @@
       "Bash(wc -l src/lib/reading/*.ts src/components/reading/ArticleViewer.tsx src/app/app/profile/reading/page.tsx src/app/app/profile/page.tsx)",
       "Bash(wc:*)",
       "Bash(curl:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(find:*)"
     ]
   }
 }
