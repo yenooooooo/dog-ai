@@ -93,7 +93,8 @@ export default function WalkPage() {
     handleDiscard();
   };
   const isShort = result ? (result.distance < 10 || result.durationSec < 30) : false;
-  const photoCount = result ? getWalkPhotos().length : 0;
+  const [photoCount, setPhotoCount] = useState(0);
+  useEffect(() => { if (result) setPhotoCount(getWalkPhotos().length); }, [result]);
 
   return (
     <div className="relative h-full overflow-hidden">
