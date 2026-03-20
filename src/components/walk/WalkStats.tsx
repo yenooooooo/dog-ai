@@ -1,12 +1,14 @@
 'use client';
 
-import { Timer, Route, Flame } from 'lucide-react';
+import { Timer, Route, Flame, Gauge } from 'lucide-react';
 
 interface WalkStatsProps {
   elapsed: number;
   distance: number;
   targetDistance?: number;
   petName?: string;
+  /** 현재 페이스 (m/분) */
+  pace?: number;
 }
 
 function formatTime(sec: number): string {
@@ -24,7 +26,7 @@ function estimateCalories(meters: number): number {
   return Math.round((meters / 1000) * 65 * 0.5);
 }
 
-export default function WalkStats({ elapsed, distance, targetDistance, petName }: WalkStatsProps) {
+export default function WalkStats({ elapsed, distance, targetDistance, petName, pace }: WalkStatsProps) {
   const progress = targetDistance && targetDistance > 0
     ? Math.min(Math.round((distance / targetDistance) * 100), 100) : null;
 
@@ -52,6 +54,13 @@ export default function WalkStats({ elapsed, distance, targetDistance, petName }
           <span className="text-[14px] font-semibold tabular-nums text-mw-gray-900">{estimateCalories(distance)}</span>
           <span className="text-[11px] text-mw-gray-400">kcal</span>
         </div>
+        {typeof pace === 'number' && (
+          <div className="flex items-center gap-1.5 rounded-mw bg-white/90 px-2.5 py-2.5 shadow-sm backdrop-blur">
+            <Gauge size={16} className="text-mw-info" strokeWidth={2} />
+            <span className="text-[13px] font-semibold tabular-nums text-mw-gray-900">{pace}</span>
+            <span className="text-[10px] text-mw-gray-400">m/분</span>
+          </div>
+        )}
       </div>
       {progress !== null && (
         <div className="mt-1.5 overflow-hidden rounded-full bg-white/60">

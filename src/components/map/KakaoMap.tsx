@@ -10,6 +10,8 @@ interface KakaoMapProps {
   center: Coordinate;
   level?: number;
   currentPosition?: Coordinate | null;
+  /** GPS heading in degrees (0=north). null = no direction info */
+  heading?: number | null;
   /** true면 현위치 변경 시 지도 중심을 따라감 */
   followPosition?: boolean;
   /** 지도 클릭 시 좌표 반환 */
@@ -27,10 +29,18 @@ const POSITION_DOT_HTML = `<div style="
   box-shadow:0 0 0 2px rgba(74,144,217,0.3),0 2px 4px rgba(0,0,0,0.2);
 "></div>`;
 
+/** heading이 있을 때 방향 화살표를 포함한 마커 HTML 생성 */
+function buildHeadingHTML(deg: number): string {
+  const arrow = `position:absolute;top:0;left:50%;transform:translateX(-50%) rotate(${deg}deg);width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid #4A90D9;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3))`;
+  const dot = `position:absolute;top:10px;left:50%;transform:translateX(-50%);width:18px;height:18px;background:#4A90D9;border:3px solid white;border-radius:50%;box-shadow:0 0 0 2px rgba(74,144,217,0.3),0 2px 4px rgba(0,0,0,0.2)`;
+  return `<div style="position:relative;width:36px;height:36px;"><div style="${arrow}"></div><div style="${dot}"></div></div>`;
+}
+
 export default function KakaoMap({
   center,
   level = 3,
   currentPosition,
+  heading = null,
   followPosition = false,
   onMapClick,
   onMapReady,
@@ -38,6 +48,7 @@ export default function KakaoMap({
 }: KakaoMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<kakao.maps.CustomOverlay | null>(null);
+  const lastHeadingRef = useRef<number | null>(null);
   const hasPannedRef = useRef(false);
   const { map, isLoaded, error } = useKakaoMap(containerRef, { center, level });
 
@@ -55,20 +66,29 @@ export default function KakaoMap({
       hasPannedRef.current = true;
     }
 
-    if (overlayRef.current) {
+    const hasHeading = typeof heading === 'number';
+    const headingChanged = hasHeading && heading !== lastHeadingRef.current;
+    lastHeadingRef.current = heading;
+    const html = hasHeading ? buildHeadingHTML(heading) : POSITION_DOT_HTML;
+
+    // heading이 바뀌면 overlay를 재생성해야 콘텐츠가 갱신됨
+    if (overlayRef.current && !headingChanged) {
       overlayRef.current.setPosition(latlng);
       return;
     }
+    if (overlayRef.current) {
+      overlayRef.current.setMap(null);
+    }
 
     const overlay = new window.kakao.maps.CustomOverlay({
-      content: POSITION_DOT_HTML,
+      content: html,
       position: latlng,
-      yAnchor: 0.5,
+      yAnchor: hasHeading ? 0.7 : 0.5,
       xAnchor: 0.5,
     });
     overlay.setMap(map);
     overlayRef.current = overlay;
-  }, [map, isLoaded, currentPosition, followPosition]);
+  }, [map, isLoaded, currentPosition, heading, followPosition]);
 
   useEffect(() => {
     if (isLoaded && map) onMapReady?.(map);
@@ -105,5 +125,22 @@ export default function KakaoMap({
     );
   }
 
-  return <div ref={containerRef} className={className} />;
+  // 헤딩 모드: followPosition + heading 유효 시 지도 컨테이너를 CSS 회전
+  const shouldRotate = followPosition && typeof heading === 'number';
+  const rotation = shouldRotate ? -heading : 0;
+
+  return (
+    <div className={`${className} overflow-hidden`}>
+      <div
+        ref={containerRef}
+        className="h-full w-full transition-transform duration-500 ease-out"
+        style={rotation !== 0 ? {
+          transform: `rotate(${rotation}deg)`,
+          // 회전 시 모서리가 보이지 않도록 살짝 확대
+          width: '120%', height: '120%',
+          marginLeft: '-10%', marginTop: '-10%',
+        } : undefined}
+      />
+    </div>
+  );
 }

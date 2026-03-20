@@ -25,6 +25,7 @@ import WeatherWarning from '@/components/walk/WeatherWarning';
 import WalkStartPanel from '@/components/walk/WalkStartPanel';
 import RoutePolyline from '@/components/map/RoutePolyline';
 import RouteDirectionMarkers from '@/components/map/RouteDirectionMarkers';
+import ReturnGuide from '@/components/walk/ReturnGuide';
 
 const KakaoMap = dynamic(() => import('@/components/map/KakaoMap'), {
   ssr: false, loading: () => <div className="h-full w-full bg-mw-gray-100 animate-pulse" />,
@@ -41,7 +42,7 @@ export default function WalkPage() {
   const petId = selectedPetId ?? undefined;
   const petName = selectedPetName ?? undefined;
   const {
-    position, gpsError, gpsLoading,
+    position, heading, gpsError, gpsLoading,
     isWalking, isPaused, coordinates, distance, elapsed, targetDistance,
     startWalk, pauseWalk, resumeWalk, endWalk, reset,
   } = useWalkTracker();
@@ -96,21 +97,17 @@ export default function WalkPage() {
 
   return (
     <div className="relative h-full overflow-hidden">
-      <KakaoMap center={center} currentPosition={position} followPosition={isWalking && following && !isPaused} level={3} className="h-full w-full" onMapReady={setMapInstance} />
+      <KakaoMap center={center} currentPosition={position} heading={isWalking ? heading : null} followPosition={isWalking && following && !isPaused} level={3} className="h-full w-full" onMapReady={setMapInstance} />
 
-      {mapInstance && referenceRoute && (
-        <>
-          <RoutePolyline map={mapInstance} path={referenceRoute.path} color="#2D8A42" opacity={0.25} weight={4} fitBounds={!isWalking} />
-          <RouteDirectionMarkers map={mapInstance} path={referenceRoute.path} />
-        </>
-      )}
+      {mapInstance && referenceRoute && (<>
+        <RoutePolyline map={mapInstance} path={referenceRoute.path} color="#2D8A42" opacity={0.25} weight={4} fitBounds={!isWalking} />
+        <RouteDirectionMarkers map={mapInstance} path={referenceRoute.path} />
+      </>)}
       {mapInstance && coordinates.length >= 2 && (
         <RoutePolyline map={mapInstance} path={coordinates} color="#2D8A42" opacity={0.9} weight={5} fitBounds={false} />
       )}
-
       <WalkTagManager map={mapInstance} position={position} isOpen={showTags} onClose={() => setShowTags(false)} />
-      <NightWarning />
-      <WeatherWarning />
+      <NightWarning /><WeatherWarning />
       {!isWalking && (gpsLoading || gpsError) && (
         <div className="absolute left-5 top-3 z-30 rounded-mw bg-white/90 px-3 py-2 shadow-sm backdrop-blur">
           <p className={`text-[13px] ${gpsError ? 'text-mw-danger' : 'text-mw-gray-500'}`}>
@@ -118,7 +115,10 @@ export default function WalkPage() {
           </p>
         </div>
       )}
-      {isWalking && <WalkStats elapsed={elapsed} distance={distance} targetDistance={targetDistance} petName={petName} />}
+      {isWalking && <WalkStats elapsed={elapsed} distance={distance} targetDistance={targetDistance} petName={petName} pace={elapsed > 0 ? Math.round(distance / elapsed * 60) : 0} />}
+      {isWalking && position && coordinates.length > 0 && (
+        <ReturnGuide startPosition={coordinates[0]} currentPosition={position} />
+      )}
       {isWalking && (
         <WalkActionBar isPaused={isPaused} position={position} onTag={() => setShowTags(true)} onPause={pauseWalk} onResume={resumeWalk} onStop={() => setResult(endWalk())} />
       )}
@@ -138,7 +138,6 @@ export default function WalkPage() {
       {!isWalking && !result && (
         <WalkStartPanel route={referenceRoute} positionReady={!!position} onStartGuide={handleStartGuide} onStartFree={handleStartFree} />
       )}
-
       {result && isShort && (
         <ShortWalkPrompt distance={result.distance} durationSec={result.durationSec} onSave={() => handleConfirm({ rating: 0, comment: '', healthMemo: null })} onDiscard={handleDiscard} />
       )}

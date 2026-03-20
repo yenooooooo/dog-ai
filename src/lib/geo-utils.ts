@@ -16,6 +16,15 @@ export function getDistanceMeters(a: Coordinate, b: Coordinate): number {
   return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
+/** 두 좌표 사이 방위각(도, 0=북 시계방향) */
+export function getBearingDeg(from: Coordinate, to: Coordinate): number {
+  const dLng = toRad(to.lng - from.lng);
+  const y = Math.sin(dLng) * Math.cos(toRad(to.lat));
+  const x = Math.cos(toRad(from.lat)) * Math.sin(toRad(to.lat))
+    - Math.sin(toRad(from.lat)) * Math.cos(toRad(to.lat)) * Math.cos(dLng);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
 /** 기준점에서 특정 방위각(도)/거리(미터)만큼 떨어진 좌표 반환 */
 export function getPointAtBearing(
   origin: Coordinate,

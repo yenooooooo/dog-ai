@@ -7,6 +7,8 @@ import type { Coordinate } from '@/types/route';
 
 interface GeolocationState {
   position: Coordinate | null;
+  /** GPS heading in degrees (0=north, 90=east). null if unavailable. */
+  heading: number | null;
   error: string | null;
   isLoading: boolean;
 }
@@ -22,6 +24,7 @@ const ANGLE_FILTER_DEG = 90;
 export function useGeolocation() {
   const [state, setState] = useState<GeolocationState>({
     position: null,
+    heading: null,
     error: null,
     isLoading: true,
   });
@@ -35,6 +38,7 @@ export function useGeolocation() {
     if (!navigator.geolocation) {
       setState({
         position: null,
+        heading: null,
         error: 'GPS를 지원하지 않는 브라우저예요.',
         isLoading: false,
       });
@@ -77,7 +81,11 @@ export function useGeolocation() {
         lastTimeRef.current = now;
         prevPosRef.current = lastPosRef.current;
         lastPosRef.current = coord;
-        setState({ position: coord, error: null, isLoading: false });
+        // heading: null when device cannot determine direction
+        const rawHeading = geo.coords.heading;
+        const heading = (typeof rawHeading === 'number' && !isNaN(rawHeading) && rawHeading >= 0)
+          ? rawHeading : null;
+        setState({ position: coord, heading, error: null, isLoading: false });
       },
       (err) => {
         const msg =
@@ -85,7 +93,7 @@ export function useGeolocation() {
             ? '위치 권한이 필요해요. 설정에서 허용해주세요.'
             : '위치를 가져올 수 없어요. 실외에서 다시 시도해주세요.';
         console.error('GPS 오류:', err);
-        setState((prev) => ({ ...prev, error: msg, isLoading: false }));
+        setState((prev) => ({ ...prev, error: msg, isLoading: false, heading: null }));
       },
       {
         enableHighAccuracy: true,

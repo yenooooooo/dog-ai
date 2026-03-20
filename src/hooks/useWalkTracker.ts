@@ -7,7 +7,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { useWalkStore } from '@/stores/walkStore';
 
 export function useWalkTracker() {
-  const { position, error, isLoading } = useGeolocation();
+  const { position, heading, error, isLoading } = useGeolocation();
   const {
     isWalking, isPaused, startedAt, targetDistance,
     coordinates, distance,
@@ -17,6 +17,7 @@ export function useWalkTracker() {
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const halfAlerted = useRef(false);
+  const milestoneRef = useRef(0);
 
   useEffect(() => {
     if (isWalking && startedAt) {
@@ -38,6 +39,24 @@ export function useWalkTracker() {
     }
   }, [isWalking, distance, targetDistance]);
 
+  // 500m마다 마일스톤 축하 토스트
+  useEffect(() => {
+    if (!isWalking) return;
+    const next = milestoneRef.current + 500;
+    if (distance >= next) {
+      milestoneRef.current = Math.floor(distance / 500) * 500;
+      const km = milestoneRef.current / 1000;
+      const msg = milestoneRef.current === 500
+        ? '500m 돌파! 좋은 페이스예요 🐾'
+        : milestoneRef.current === 1000
+          ? '1km 달성! 대단해요!'
+          : milestoneRef.current === 1500
+            ? '1.5km! 오늘 컨디션 좋은데요?'
+            : `${km}km 달성! 멋져요!`;
+      toast.success(msg);
+    }
+  }, [isWalking, distance]);
+
   useEffect(() => {
     if (isWalking && !isPaused && position) addCoordinate(position);
   }, [isWalking, isPaused, position, addCoordinate]);
@@ -48,10 +67,10 @@ export function useWalkTracker() {
   };
 
   return {
-    position, gpsError: error, gpsLoading: isLoading,
+    position, heading, gpsError: error, gpsLoading: isLoading,
     isWalking, isPaused, coordinates, distance, elapsed, targetDistance,
     startWalk, pauseWalk, resumeWalk,
     endWalk: handleEnd,
-    reset: () => { setElapsed(0); halfAlerted.current = false; reset(); },
+    reset: () => { setElapsed(0); halfAlerted.current = false; milestoneRef.current = 0; reset(); },
   };
 }
