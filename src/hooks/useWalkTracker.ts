@@ -4,10 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { useCompass } from '@/hooks/useCompass';
 import { useWalkStore } from '@/stores/walkStore';
 
 export function useWalkTracker() {
-  const { position, heading, error, isLoading } = useGeolocation();
+  const { position, heading: gpsHeading, error, isLoading } = useGeolocation();
+  const { compassHeading } = useCompass();
+  // 걷는 중(GPS heading 있음) → GPS, 서 있을 때 → 나침반
+  const heading = gpsHeading ?? compassHeading;
   const {
     isWalking, isPaused, startedAt, targetDistance,
     coordinates, distance,
